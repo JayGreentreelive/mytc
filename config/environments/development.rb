@@ -24,4 +24,7 @@ Myumbc4::Application.configure do
   # This option may cause significant delays in view rendering with a large
   # number of complex assets.
   config.assets.debug = true
+  
+  # Set logging level to DEBUG, gotta love the logs
+  config.log_level = :debug
 end
