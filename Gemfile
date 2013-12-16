@@ -35,7 +35,22 @@ end
 # gem 'debugger', group: [:development, :test]
 
 # Use puma web server, so fast
-gem 'puma'
+gem 'puma', group: :develpement
 
 # Use mongoid for the ORM
 gem 'mongoid', github: 'mongoid/mongoid'
+
+# Used for pulling content from remote http
+gem 'rest-client'
+
+# Pretty output for development
+gem 'awesome_print', group: :development, github: 'michaeldv/awesome_print', branch: 'master'
+
+# Pure-ruby LDAP gem
+gem 'net-ldap'
+
+# Useful string extentions (https://github.com/rsl/stringex)
+#gem 'stringex'
+
+# Useful for turning entities into unicode
+gem 'htmlentities'

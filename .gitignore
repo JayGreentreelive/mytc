@@ -15,5 +15,11 @@
 /log/*.log
 /tmp
 
-# Ignore mongoid config files
+# Hide our secret
+/config/initializers/secret_token.rb
+
+# Ignore config files
+/config/application.yml
 /config/mongoid.yml
+/config/umbc.yml
+

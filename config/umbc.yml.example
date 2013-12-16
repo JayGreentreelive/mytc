@@ -1,0 +1,20 @@
+defaults: &defaults
+  myumbc3:
+    importer:
+      passkey: # ooh top secret!
+  
+  ldap:
+    host: ds.umbc.edu
+    port: 636
+    method: simple
+    username: # LDAP Username
+    password: # LDAP Password
+
+development:
+  <<: *defaults
+
+test:
+  <<: *defaults
+
+production:
+  <<: *defaults

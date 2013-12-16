@@ -27,4 +27,8 @@ Myumbc4::Application.configure do
   
   # Set logging level to DEBUG, gotta love the logs
   config.log_level = :debug
+  
+  # Mongoid Configuration
+  Mongoid.logger.level = Logger::DEBUG
+  Moped.logger.level = Logger::DEBUG
 end
