@@ -1,14 +1,14 @@
 module Utils
   class Slugger
 
-    REGEX = /\A([a-z0-9-]+)\z/
-    SEPARATOR = '-'
+    SLUG_REGEX = /\A([a-z0-9-]+)\z/
+    SLUG_SEPARATOR = '-'
 
     def self.valid?(obj)
-      obj.present? && obj.match(REGEX)
+      obj.present? && obj.match(SLUG_REGEX)
     end
 
-    def self.slugify(obj, sep = SEPARATOR)
+    def self.slugify(obj, sep = SLUG_SEPARATOR)
       if obj.blank?
         return sep
       end

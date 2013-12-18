@@ -2,8 +2,8 @@ class UmbcPerson < Person
   
   DOMAIN_PEOPLE['umbc.edu'] = self
   
-  REGEX_CAMPUS_ID = /\A[A-Z]{2}[0-9]{5}\Z/
-  REGEX_USERNAME = /\A[a-z0-9\-]{,16}\Z/
+  CAMPUS_ID_REGEX = /\A[A-Z]{2}[0-9]{5}\Z/
+  USERNAME_REGEX = /\A[a-z0-9\-]{,16}\Z/
   
   field :umbc_campus_id, type: String
   field :umbc_alt_campus_ids, type: Array, default: []
@@ -15,12 +15,20 @@ class UmbcPerson < Person
   field :umbc_standing, type: String
   field :umbc_affiliations, type: Array, default: []
   field :umbc_title, type: String
+  field :umbc_department, type: String
   field :umbc_alt_names, type: Array, default: []
   field :umbc_privacy_level, type: Integer, default: 0
+  field :umbc_services, type: Array, default: []
   
   # Validations
-  validates :umbc_campus_id, presence: true, format: { with: REGEX_CAMPUS_ID }
-  validates :umbc_username, presence: false, format: { with: REGEX_USERNAME }
+  validates :umbc_campus_id, presence: true, format: { with: CAMPUS_ID_REGEX }
+  validates :umbc_alt_campus_ids, array: { presence: true, format: { with: CAMPUS_ID_REGEX } }
+  validates :umbc_username, allow_nil: true, format: { with: USERNAME_REGEX }
+  validates :umbc_majors, array: { presence: true }
+  validates :umbc_minors, array: { presence: true }
+  validates :umbc_standing, allow_nil: true, inclusion: { in: %w(freshman sophomore junior senior grad cned) }
+  validates :umbc_privacy_level, numericality: { only_integer: true }
+  validates :umbc_services, array: { presence: true, format: { with: Utils::Slugger::SLUG_REGEX } }
   
   def self.lookup(em)
     Umbc::Ldap.find_people(all_ids: em).map { |p| self.find_or_setup(p.eppn, p) }.compact
@@ -33,40 +41,43 @@ class UmbcPerson < Person
   end
   
   def sync(login_data = nil)
-    if !login_data.is_a?(Umbc::Ldap::Person)
+    if login_data.blank?
       login_data = Umbc::Ldap::Person.find_by_eppn(self.eppn)
     end
     
-    if login_data.present?
+    if login_data.is_a?(Umbc::Ldap::Person)
       update_with_ldap_data(login_data)
+      self.last_sync_at = Time.zone.now
+      true
+    else
+      super(login_data)
     end
-    
-    self.last_sync_at = Time.zone.now
-    true
   end
-  
+    
   private
   
   def update_with_ldap_data(ldap_person)
     self.name = ldap_person.name
     self.first_name = ldap_person.nickname
     self.last_name = ldap_person.last_name
-    self.emails = ldap_person.emails
+    self.emails = ldap_person.emails.select { |em| em.match(EMAIL_REGEX) }
     self.display_email = ldap_person.display_email
     self.contact_email = ldap_person.contact_email
     self.birthday = ldap_person.birthday
     self.umbc_campus_id = ldap_person.campus_id
-    self.umbc_alt_campus_ids = ldap_person.alternate_campus_ids
+    self.umbc_alt_campus_ids = ldap_person.alternate_campus_ids.select { |ci| ci.match(CAMPUS_ID_REGEX) }
     self.umbc_username = ldap_person.username
     self.umbc_empl_id = ldap_person.empl_id
     self.umbc_lims_id = ldap_person.lims_id
     self.umbc_majors = ldap_person.majors
     self.umbc_minors = ldap_person.minors
     self.umbc_standing = ldap_person.standing
-    self.umbc_affiliations = ldap_person.affiliations
+    self.umbc_affiliations = ldap_person.affiliations.map { |a| Utils::Slugger.slugify(a) }
     self.umbc_title = ldap_person.title
+    self.umbc_department = ldap_person.display_department
     self.umbc_alt_names = ldap_person.names
     self.umbc_privacy_level = ldap_person.privacy_level
+    self.umbc_services = ldap_person.services.map { |s| Utils::Slugger.slugify(s) }
   end
     
   # Privacy

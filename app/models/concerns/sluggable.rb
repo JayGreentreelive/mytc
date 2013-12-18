@@ -6,9 +6,11 @@ module Sluggable
     field :display_slug, type: String
     
     index({ slugs: 1, _type: 1 }, { unique: true, sparse: true })
+    
+    validates :slugs, array: { presence: true, format: { with: Utils::Slugger::SLUG_REGEX } }
+    validates :display_slug, allow_nil: true, format: { with: Utils::Slugger::SLUG_REGEX }
 
-    validate :validate_slugs
-    before_create :ensure_id_in_slugs
+    before_save :ensure_id_in_slugs
   end
 
   # Class Methods
@@ -34,8 +36,10 @@ module Sluggable
 
   def add_slug(sl)
     sl = Utils::Slugger.slugify(sl)
-    self.slugs_will_change!
-    self.slugs << sl unless self.has_slug?(sl)
+    if !self.has_slug?(sl)
+      self.slugs_will_change!
+      self.slugs << sl 
+    end
     sl
   end
   
@@ -49,17 +53,4 @@ module Sluggable
   def ensure_id_in_slugs
     self.add_slug(self.id)
   end
-
-  def validate_slugs
-    self.slugs.each do |sl|
-      unless Utils::Slugger.valid?(sl)
-        errors.add :slugs, "contains an invalid slug: #{sl}"
-      end
-    end
-
-    if self.display_slug && !self.has_slug?(self.display_slug)
-      errors.add :display_slug, "is not in the list of slugs"
-    end
-  end
-
 end

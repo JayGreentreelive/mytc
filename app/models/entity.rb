@@ -3,10 +3,12 @@ class Entity
   include RandomId
   include Sluggable
   include Flaggable
-  # TODO include Visible
+  include Visible
   
   field :name, type: String
-  field :avatar, type: String  
-  field :visibility, type: Array, default: []
+  
+  validates :first_name, presence: true, length: { minimum: 1 }
+  #field :avatar, type: String  
+  
   
 end

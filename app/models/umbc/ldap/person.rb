@@ -1,7 +1,9 @@
 module Umbc
   class Ldap
     class Person < Entry
-      
+      CAMPUS_ID_REGEX = /\A[A-Z]{2}[0-9]{5}\Z/
+      USERNAME_REGEX = /\A[a-z0-9\-]{,16}\Z/
+      EMAIL_REGEX = /\A([^@\s]+)@((?:[-a-z0-9]+\.)+[a-z]{2,})\z/i
       PRIVACY_LIMIT = 2
       
       ## Finders
@@ -128,12 +130,13 @@ module Umbc
       end
 
       # Email
-      # def email
-      #   self.display_email
-      # end
-
       def display_email
-        single_value(:mail, (self.username ? "#{username}@umbc.edu" : "#{campus_id}@umbc.edu")).downcase
+        de = single_value(:mail).try(:downcase)
+        if de.present? && de.match(EMAIL_REGEX)
+          de
+        else
+          (self.username ? "#{username}@umbc.edu" : "#{campus_id}@umbc.edu").downcase
+        end
       end
 
       def contact_email
@@ -144,11 +147,10 @@ module Umbc
         ems = []
         ems << "#{self.campus_id}@umbc.edu".downcase
         ems << "#{self.username}@umbc.edu".downcase if self.username.present?
-        # ems << email
         ems << self.contact_email
-        ems << self.maildrop
+        ems << self.maildrop.split(',') if self.maildrop
         ems << self.email_aliases
-        ems.flatten.uniq.compact.sort
+        ems.flatten.uniq.compact.sort.map { |em| em.strip }.select { |em| em.match(EMAIL_REGEX) }
       end
 
       def email_aliases
@@ -273,18 +275,18 @@ module Umbc
         services = []
 
         if single_value(:umbcgappsemail, '').downcase == 'true'
-          services << :umbc_google_mail
+          services << :google_mail
         end
 
         if single_value(:umbcgappsprovisioned, '').downcase == 'true'
-          services << :umbc_google_calendar
-          services << :umbc_google_drive
+          services << :google_calendar
+          services << :google_drive
         end
 
         if self.account
           if self.account.active?  && self.account.ok?
-            services << :umbc_mail
-            services << :umbc_blackboard
+            services << :mail
+            services << :blackboard
           end
         end
 

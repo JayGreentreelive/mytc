@@ -1,6 +1,7 @@
 class Person < Entity
-  
-  REGEX_EPPN = /@/
+  # Constants
+  EPPN_REGEX = /@/
+  EMAIL_REGEX = /\A([^@\s]+)@((?:[-a-z0-9]+\.)+[a-z]{2,})\z/i
   DOMAIN_PEOPLE = {}
   LEGACY_ID_PREFIX = 'my3-user-'
   
@@ -27,37 +28,35 @@ class Person < Entity
   before_save :set_sorted_name
   
   # Validations
-  validates :eppn, presence: true, format: { with: REGEX_EPPN }
-  validates :first_name, presence: true
-  validates :last_name, presence: true
-  validates :display_email, presence: true
-  validates :contact_email, presence: true
+  validates :eppn, presence: true, format: { with: EPPN_REGEX }
+  validates :first_name, presence: true, length: { minimum: 1 }
+  validates :last_name, presence: true, length: { minimum: 1 }
+  # don't validate sorted_name because its system set
+  validates :emails, array: { presence: true, format: { with: EMAIL_REGEX } }
+  validates :display_email, presence: true, format: { with: EMAIL_REGEX }
+  validates :contact_email, presence: true, format: { with: EMAIL_REGEX }
   
+  #####
   # Class Methods
-  
-  def self.validate_all
-    self.each do |p|
-      if !p.valid?
-        puts "#{p.eppn} is not valid! Username: #{p.umbc_username}"
-      end
-    end
-  end
-  
+    
+  # Lookup user by email/identifier
   def self.lookup(em)
-    domain = em.split('@')[1]
+    em = em.try(:strip)
+    domain = em.strip.split('@')[1]
     full_em = domain.present? ? em : em.concat("@#{APP_CONFIG[:default_domain]}").downcase
     
-    matches = self.where(emails: full_em)
+    matches = self.where(emails: full_em).to_a
     
     if matches.blank? && DOMAIN_PEOPLE[domain || APP_CONFIG[:default_domain]]
       matches = DOMAIN_PEOPLE[domain || APP_CONFIG[:default_domain]].lookup(em)
     end
     
-    matches.to_a
+    matches
   end
   
+  # Find or setup based on eppn
   def self.find_or_setup(eppn, data = nil)
-    eppn = eppn.try(:downcase)
+    eppn = eppn.try(:downcase).try(:strip)
     domain = eppn.split('@')[1]
     
     raise ArgumentError.new('Invalid EPPN given') if domain.blank?
@@ -73,8 +72,12 @@ class Person < Entity
   end
     
   # Instance Methods
+  
   def sync(login_data = nil)
     # update firstname, lastname, emails from shib data
+    if login_data.respond_to?(:keys)
+      self.update_attributes(login_data)
+    end
     true
   end
   
@@ -88,6 +91,16 @@ class Person < Entity
       self.favorites.build name: name, url: url
     end
   end
+  
+  def age
+    if self.birthday
+      now = Time.zone.now
+      now.year - self.birthday.year - (birthday.to_time.change(year: now.year) > now ? 1 : 0)
+    else
+      0
+    end
+  end
+  
 
   # IDEA: Not useful yet
   #def use_favorite(id)
@@ -101,6 +114,6 @@ class Person < Entity
   private
   
   def set_sorted_name
-    self.sorted_name = ActiveSupport::Inflector.parameterize("#{ActiveSupport::Inflector.transliterate(self.last_name).downcase}#{ActiveSupport::Inflector.transliterate(self.first_name).downcase}#{self.id}", '').gsub(/[^a-z]/i, '')
+    self.sorted_name = ActiveSupport::Inflector.parameterize("#{ActiveSupport::Inflector.transliterate(self.last_name).downcase}#{ActiveSupport::Inflector.transliterate(self.first_name).downcase}", '').gsub(/[^a-z]/i, '').concat("-#{self.id}")
   end
 end

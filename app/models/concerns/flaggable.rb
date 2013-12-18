@@ -2,7 +2,8 @@ module Flaggable
   extend ActiveSupport::Concern
 
   included do
-    field :flags, type: Array, default: []    
+    field :flags, type: Array, default: []
+    validates :flags, array: { presence: true, format: { with: Utils::Slugger::SLUG_REGEX } } 
   end
 
   # Class Methods

@@ -1,6 +1,6 @@
 module RandomId
   
-  ID_LENGTH = 10
+  DEFAULT_ID_LENGTH = 10
   
   extend ActiveSupport::Concern
 
@@ -13,7 +13,7 @@ module RandomId
   protected
 
   def generate_id
-    Utils::IdGenerator.generate(ID_LENGTH)
+    Utils::IdGenerator.generate(DEFAULT_ID_LENGTH)
   end
 
   private
