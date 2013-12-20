@@ -54,3 +54,9 @@ gem 'net-ldap'
 
 # Useful for turning entities into unicode
 gem 'htmlentities'
+
+# Normalize attributes, yo
+gem 'attribute_normalizer'
+
+# Nokogiri, the best for XML parsing
+gem 'nokogiri'

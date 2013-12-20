@@ -10,15 +10,15 @@ module Utils
 
     def self.slugify(obj, sep = SLUG_SEPARATOR)
       if obj.blank?
-        return sep
+        raise ArgumentError.new 'Cannot sluggify a blank object'
       end
 
       if obj.respond_to? :slug
-        return obj.slug
+        return obj.slug.squish
       end
 
       if obj.respond_to? :to_s
-        obj = obj.to_s
+        obj = obj.to_s.squish
       end
 
       # replace accented chars with ther ascii equivalents

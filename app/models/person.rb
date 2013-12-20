@@ -17,12 +17,12 @@ class Person < Entity
   field :last_login_at, type: DateTime
   field :last_sync_at, type: DateTime
   
+  # Relations
+  embeds_many :favorites
+  
   # Indexes
   index({ eppn: 1 }, { sparse: true, unique: true })
   index({ emails: 1 }, { sparse: true })
-  
-  # Relations
-  embeds_many :favorites
   
   # Callbacks
   before_save :set_sorted_name

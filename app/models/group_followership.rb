@@ -1,0 +1,2 @@
+class GroupFollowership < GroupWatchership
+end

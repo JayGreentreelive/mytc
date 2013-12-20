@@ -3,6 +3,8 @@ module Visible
 
   included do
     field :visibility, type: Array, default: []
+    
+    #index({ visibility: 1, _type: 1 }, { sparse: true })
   end
 
   # Class Methods

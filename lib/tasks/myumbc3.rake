@@ -11,4 +11,12 @@ namespace :myumbc3 do
     Myumbc3::Importer.reset
   end
   
+  namespace :group do
+    desc "Dump the group data into a json file"
+    task :dump, [:group_id] => :environment do |t, args|
+      require 'myumbc3/importer'
+      Myumbc3::Importer::GroupImporter.dump(args.group_id)
+    end
+  end
+  
 end
