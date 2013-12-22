@@ -28,7 +28,7 @@ module Myumbc3
       Mongoid.logger.level = Logger::INFO
       Moped.logger.level = Logger::INFO
       
-      output_file = File.new('importer.out', 'w')
+      output_file = File.new('tmp/importer.out', 'w')
       
       #UserImporter.import(output_file)
       GroupImporter.import(output_file)

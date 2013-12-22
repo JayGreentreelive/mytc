@@ -13,7 +13,7 @@ module Myumbc3
         js = JSON.parse(ht.to_str, symbolize_names: true).first
         out = JSON.pretty_generate(js)
         
-        output_file = File.new("group-#{js[:id]}.json", 'w')
+        output_file = File.new("tmp/group-#{js[:id]}.json", 'w')
         output_file << out
         output_file.close
       end
