@@ -11,9 +11,6 @@ development:
       hosts:
         - localhost:27017
       options:
-        # Enable safe mode to ensure writes are persisted
-        safe: true
-        
         # Change the default write concern. (default = { w: 1 })
         # write:
         # w: 1
