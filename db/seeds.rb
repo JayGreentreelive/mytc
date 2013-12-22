@@ -10,5 +10,6 @@
 public = Public.create id: 'public', name: 'Public', visibility: ['public'], slugs: ['public'], display_slug: 'public'
 system = System.create id: 'system', name: 'System', visibility: ['system'], slugs: ['system', 'my3-user-1'], display_slug: 'system'
 guest = Guest.create id: 'guest', name: 'Guest', visibility: ['guest'], slugs: ['guest', 'my3-user-2'], display_slug: 'guest'
+unknown = Unknown.create id: 'unknown', name: 'Unknown', visibility: ['unknown'], slugs: ['unknown', 'my3-user-2'], display_slug: 'unknown'
 
 

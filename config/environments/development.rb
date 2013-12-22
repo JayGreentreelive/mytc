@@ -27,8 +27,33 @@ Myumbc4::Application.configure do
   
   # Set logging level to DEBUG, gotta love the logs
   config.log_level = :debug
+  config.log_formatter = proc do |sev, ts, prog, msg|
+    # Colors from here: http://misc.flogisoft.com/bash/tip_colors_and_formatting
+    color = {'DEBUG'=>'243', 'INFO'=>'39', 'WARN'=>'208', 'ERROR'=>'196', 'FATAL'=>'165', 'UNKNOWN'=>'255'}[sev]
+    log = "\033[38;5;#{color}m#{ts.strftime("%H:%M:%S")} #{sev.rjust(5)} : #{msg}\033[0m\n"
+    
+    if log.match(/MOPED:/)
+      if log.match(/ QUERY /)
+        log.gsub!(/ QUERY /, " \033[38;5;24mQUERY \033[38;5;#{color}m")
+        log.gsub!(/selector=(\{.*\})/, "selector=\033[38;5;24m\\1\033[38;5;#{color}m")
+      end
+      if log.match(/ INSERT /)
+        log.gsub!(/ INSERT /, " \033[38;5;64mINSERT \033[38;5;#{color}m")
+        log.gsub!(/documents=(\[.*\]) /, "documents=\033[38;5;64m\\1\033[38;5;#{color}m ")
+      end
+      if log.match(/ DELETE /)
+        log.gsub!(/ DELETE /, " \033[38;5;196mDELETE \033[38;5;#{color}m")
+        log.gsub!(/selector=(\{.*\})/, "selector=\033[38;5;196m\\1\033[38;5;#{color}m")
+      end
+    end
+    log.gsub!(/runtime: ([0-9\.ms]+)/, " runtime: \033[38;5;88m\\1\033[38;5;#{color}m\\2")
+    
+    log
+  end  
   
   # Mongoid Configuration
   Mongoid.logger.level = Logger::DEBUG
+  Mongoid.logger.formatter = config.log_formatter
   Moped.logger.level = Logger::DEBUG
+  Moped.logger.formatter = config.log_formatter
 end

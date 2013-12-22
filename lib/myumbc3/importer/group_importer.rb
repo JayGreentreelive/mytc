@@ -105,7 +105,7 @@ module Myumbc3
             end
             
             #ap old_group
-            puts "#{new_group.name}"
+            #puts "#{new_group.name}"
             new_group.save!
             
             batch_import_count += 1
