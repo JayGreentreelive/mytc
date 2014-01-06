@@ -18,7 +18,7 @@ class Person < Entity
   field :last_sync_at, type: DateTime
   
   # Relations
-  embeds_many :favorites
+  embeds_many :favorites, class_name: 'PersonFavorite'
   
   # Indexes
   #index({ eppn: 1 }, { sparse: true, unique: true })
