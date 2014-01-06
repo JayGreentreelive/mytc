@@ -19,8 +19,14 @@ module RandomId
   private
 
   def ensure_unique_id
-    while self.class.find_by(id: self.id).present?
-      self.id = self.generate_id
+    if self.embedded?
+      while self.send(self.metadata.inverse).send(self.metadata.name).where(id: self.id).length > 1
+        self.id = self.generate_id
+      end
+    else
+      while self.class.find_by(id: self.id).present?
+        self.id = self.generate_id
+      end
     end
   end
   

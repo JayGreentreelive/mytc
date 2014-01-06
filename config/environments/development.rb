@@ -41,9 +41,17 @@ Myumbc4::Application.configure do
         log.gsub!(/ INSERT /, " \033[38;5;64mINSERT \033[38;5;#{color}m")
         log.gsub!(/documents=(\[.*\]) /, "documents=\033[38;5;64m\\1\033[38;5;#{color}m ")
       end
+      if log.match(/ UPDATE /)
+        log.gsub!(/ UPDATE /, " \033[38;5;64mUPDATE \033[38;5;#{color}m")
+        log.gsub!(/selector=(\{.*\}) update=(\{.*\})/, "selector=\033[38;5;24m\\1\033[38;5;#{color}m update=\033[38;5;64m\\2\033[38;5;#{color}m ")
+      end
       if log.match(/ DELETE /)
         log.gsub!(/ DELETE /, " \033[38;5;196mDELETE \033[38;5;#{color}m")
         log.gsub!(/selector=(\{.*\})/, "selector=\033[38;5;196m\\1\033[38;5;#{color}m")
+      end
+      if log.match(/ COMMAND /)
+        log.gsub!(/ COMMAND /, " \033[38;5;196mCOMMAND \033[38;5;#{color}m")
+        log.gsub!(/command=(\{.*\})/, "command=\033[38;5;196m\\1\033[38;5;#{color}m")
       end
     end
     log.gsub!(/runtime: ([0-9\.ms]+)/, " runtime: \033[38;5;88m\\1\033[38;5;#{color}m\\2")

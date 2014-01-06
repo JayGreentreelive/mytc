@@ -3,4 +3,8 @@ class Node
   include RandomId
   include Sluggable
   include Visible
+  
+  embeds_many :postings
+  
+  
 end

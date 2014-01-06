@@ -9,7 +9,7 @@ module Nillable
 
   def remove_nils
     self.fields.select { |k,v| v.default_val == nil }.keys.each do |k|
-      self.remove_attribute(k) if self.send(k).nil?
+      self.remove_attribute(k) if self.send(k).nil? && self.has_attribute?(k)
     end
   end  
 end

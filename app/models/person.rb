@@ -21,8 +21,8 @@ class Person < Entity
   embeds_many :favorites
   
   # Indexes
-  index({ eppn: 1 }, { sparse: true, unique: true })
-  index({ emails: 1 }, { sparse: true })
+  #index({ eppn: 1 }, { sparse: true, unique: true })
+  #index({ emails: 1 }, { sparse: true })
   
   # Callbacks
   before_save :set_sorted_name

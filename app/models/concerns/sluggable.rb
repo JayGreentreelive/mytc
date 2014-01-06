@@ -5,7 +5,7 @@ module Sluggable
     field :slugs, type: Array, default: []
     field :display_slug, type: String
     
-    index({ slugs: 1, _type: 1 }, { unique: true, sparse: true })
+    #index({ slugs: 1, _type: 1 }, { unique: true, sparse: true })
     
     validates :slugs, array: { presence: true, format: { with: Utils::Slugger::SLUG_REGEX } }
     validates :display_slug, allow_nil: true, format: { with: Utils::Slugger::SLUG_REGEX }
