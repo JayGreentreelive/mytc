@@ -3,6 +3,7 @@ class GroupRelationship
   include Nillable
 
   # Fields
+  field :_id, type: String, default: nil
   field :created_at, type: DateTime, default: -> { Time.zone.now }
 
   # Associations

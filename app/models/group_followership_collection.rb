@@ -3,7 +3,7 @@ class GroupFollowershipCollection < GroupRelationshipCollection
   
   protected
   
-  def initialize(group)
-    super(group, ::GroupFollowership)
+  def initialize(group, options = {})
+    super(group, ::GroupFollowership, options)
   end
 end

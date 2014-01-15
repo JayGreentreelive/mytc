@@ -19,7 +19,7 @@
 #
 
 class GroupPostCategory < GroupCategory
-  include Orderable
+  #include Orderable
   
   DEFAULT_NAME = 'New Category'
   
@@ -30,7 +30,17 @@ class GroupPostCategory < GroupCategory
   
   field :format, type: Symbol, default: FORMAT_LIST
 
-  validates :format, inclusion: { in: [FORMAT_LIST, FORMAT_BLOG, FORMAT_FORUM, FORMAT_GALLERY] }  
+  validates :format, inclusion: { in: [FORMAT_LIST, FORMAT_BLOG, FORMAT_FORUM, FORMAT_GALLERY] }
+  
+  before_validation :_ensure_post_category_order
+  
+  def _ensure_post_category_order
+    if self.root?
+      unless self.group.post_category_order.all? { |a| self.categories.ids.include?(a) }
+        self.group.post_category_order += (self.categories.ids - self.group.post_category_order)
+      end
+    end
+  end
   
   # Remove a category and execute the specified dependent strategy
   #
@@ -90,13 +100,21 @@ class GroupPostCategory < GroupCategory
   
   class CategoryCollection
 
+    def reorder(new_ids)
+      if !@category.root?
+        raise "Can only reorder from the root."
+      end
+      @category.group.post_category_order = [new_ids].flatten
+    end
+
     # Add a subcategory with the given name
     #
     def add(name, format: :list, posting: :members)
       if !@category.root?
         raise "Can only add categories to the root."
       end
-      @category.group.group_categories.build({ name: name, format: format, posting: posting, parent: @category }, GroupPostCategory)
+      c = @category.group.group_categories.build({ name: name, format: format, posting: posting, parent: @category }, GroupPostCategory)
+      @category.group.post_category_order = [@category.group.post_category_order + [c.id]].flatten
     end
     
     # Remove the category (passed) with the specified dependents strategy
@@ -118,6 +136,10 @@ class GroupPostCategory < GroupCategory
       found_items.inspect
     end
     
+    def ids
+      found_items.map(&:id)
+    end
+    
     private
     
     def initialize(cat, options = {})
@@ -125,12 +147,13 @@ class GroupPostCategory < GroupCategory
     end
     
     def found_items
-      @found_items ||= @category.children
+      @found_items ||= @category.group.post_category_order.map { |i| @category.children.find(i) }
     end
     
-    #def method_missing(method, *args, &block)
-    #  found_items.send(method, *args, &block)
-    #end
-
+    def method_missing(method, *args, &block)
+      found_items.send(method, *args, &block)
+    end
   end
+  
+  
 end

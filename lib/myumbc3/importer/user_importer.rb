@@ -11,7 +11,7 @@ module Myumbc3
       def self.import(output_file)
         use_ldap = true
         page_number = 1
-        page_size = 1000
+        page_size = 5000
         total_import_count = 0
           
         begin

@@ -97,7 +97,11 @@ class Group < Entity
   #############
   # CATEGORIES / EVENTS / LIBRARY
   #
-  embeds_many :group_categories
+  field :post_category_order, type: Array, default: []
+  #validate :_validate_post_category_order
+  #before_validation :_ensure_post_category_order
+  embeds_many :group_categories, cascade_callbacks: true
+  validates_associated :group_categories
   
   def posts
     self.group_categories.type(GroupPostCategory).find(POSTS_CATEGORY_ID)
@@ -110,6 +114,12 @@ class Group < Entity
   def library
     self.group_categories.type(GroupLibraryCategory).find(LIBRARY_CATEGORY_ID)
   end
+  
+  # def _ensure_post_category_order
+  #   unless self.post_category_order.all? { |a| self.posts.categories.ids.include?(a) }
+  #     self.post_category_order = self.posts.categories.ids
+  #   end
+  # end
   
 
   private
