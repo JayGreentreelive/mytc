@@ -14,4 +14,8 @@ module Visible
   # Instance Methods
 
   private
+  
+  class VisibilityCollection
+    
+  end
 end

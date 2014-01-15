@@ -1,3 +1,13 @@
+
+# g.events => GroupEventCategory
+# g.events.items start: '2014-01-14', end: '2014-01-21' -- deep by default
+# g.events.calendars[0].items => [Event]
+
+# g.library => GroupLibraryCategory
+# g.library.items -- shallow by default
+# g.library.folders[0].folders[3].items 
+
+
 class GroupCategory
   include Mongoid::Document
   include RandomId
@@ -6,29 +16,33 @@ class GroupCategory
   
   DEFAULT_NAME = 'New Category'
   
+  POSTING_OPEN = :open
+  POSTING_MEMBERS  = :members
+  POSTING_ADMINS = :admins
+  POSTING_INHERIT = :inherit
+  
   field :name, type: String, default: -> { self.class::DEFAULT_NAME }
-
+  field :posting, type: Symbol, default: POSTING_MEMBERS
+  
+  validates :posting, inclusion: { in: [POSTING_OPEN, POSTING_MEMBERS, POSTING_ADMINS, POSTING_INHERIT] }
   
   normalize_attribute :name, with: [:blank, :squish]
-  #normalize_attribute :system, with: :true_or_nil
   
   embedded_in :group
   
-  def nodes(page: 1, page_size: 10, deep: false)
-    
-    if deep == true
-      cats = self.descendants_and_self.map(&:id)
-    else
-      cats = [self.id]
-    end
-    
-    node_ids = Node.collection.aggregate({ '$match' => { 'postings' => { '$elemMatch' => { 'target_id' => self.group.id, 'category_id' => { '$in' => cats }}} }}, { '$unwind' => '$postings' }, { '$project' => { '_id' => 1 }}, { '$limit' => page_size }, { '$skip' => ((page - 1) * page_size) }).map { |c| c['_id'] }
-    all_nodes = Node.find(nodes_ids).index_by { |p| p.id }
-    node_ids.map { |p| all_nodes[p] }
+  def remove
+    raise "IMPLEMENT THIS... SOMEDAY"
   end
   
-  def remove_self(orphans = parent)
-    puts "Removing self... orphans -> #{orphans.to_s}"
+  def posting
+    if read_attribute(:posting) == POSTING_INHERIT
+      if self.root?
+        POSTING_ADMINS
+      else
+        self.root.posting
+      end
+    else
+      super
+    end
   end
-
 end

@@ -5,12 +5,14 @@ module Sluggable
     field :slugs, type: Array, default: []
     field :display_slug, type: String
     
-    #index({ slugs: 1, _type: 1 }, { unique: true, sparse: true })
+    index({ slugs: 1, _type: 1 }, { unique: true, sparse: true })
     
     validates :slugs, array: { presence: true, format: { with: Utils::Slugger::SLUG_REGEX } }
     validates :display_slug, allow_nil: true, format: { with: Utils::Slugger::SLUG_REGEX }
+    validate :_validate_display_slug_in_slugs
 
-    before_save :ensure_id_in_slugs
+    before_save :_ensure_id_in_slugs
+    
   end
 
   # Class Methods
@@ -31,26 +33,32 @@ module Sluggable
   end
 
   def slug=(sl)
-    self.display_slug = self.add_slug(sl)
-  end
-
-  def add_slug(sl)
-    sl = Utils::Slugger.slugify(sl)
-    if !self.has_slug?(sl)
-      self.slugs_will_change!
-      self.slugs << sl 
-    end
-    sl
+    self.display_slug = sl
+    self.slugs.add(sl)
   end
   
-  def has_slug?(sl)
-    sl = Utils::Slugger.slugify(sl)
-    self.slugs.include?(sl)
+  def display_slug=(sl)
+    super Utils::Slugger.slugify(sl)
+  end
+  
+  def slugs=(sl)
+    Utils::SlugCollection.new(self, :slugs).set(sl)
+  end
+  
+  def slugs
+    Utils::SlugCollection.new(self, :slugs)
   end
 
   private
 
-  def ensure_id_in_slugs
-    self.add_slug(self.id)
+  def _ensure_id_in_slugs
+    self.slugs.add(self.id)
   end
+  
+  def _validate_display_slug_in_slugs
+    if self.display_slug.present? && !self.slugs.include?(self.display_slug)
+      errors.add(:display_slug, "is not in slugs array")
+    end
+  end
+
 end

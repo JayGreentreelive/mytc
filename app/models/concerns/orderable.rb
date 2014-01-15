@@ -3,9 +3,9 @@
 
 module Orderable
   extend ActiveSupport::Concern
-
+  
   included do
-    field :position, type: Integer, default: 0
+    field :_position, type: Integer, default: 0
     
     #validate :_validate_order
   end
@@ -13,21 +13,21 @@ module Orderable
   # Class Methods
   module ClassMethods
   end
-
+  
   #private
   
-  def order_scope
-    @order_scope
-  end
-
-  def _order_query_base
-    # By default, this 
-    if self.embedded?
-      self.send(self.metadata.inverse).send(self.metadata.name).type(self.class)
-    else
-      self.class
-    end
-  end
+  # def order_scope
+  #   @order_scope
+  # end
+  
+  # def _order_query_base
+  #   # By default, this 
+  #   if self.embedded?
+  #     self.send(self.metadata.inverse).send(self.metadata.name).type(self.class)
+  #   else
+  #     self.class
+  #   end
+  # end
 end
 
 

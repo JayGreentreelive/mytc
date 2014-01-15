@@ -46,16 +46,41 @@ module Myumbc3
 
                 if ldap_user.present?                
                   person = UmbcPerson.find_or_setup(user[:eppn], ldap_user)
-                  person.add_slug "my3-user-#{user[:id]}"
+                  person.slugs.add "my3-user-#{user[:id]}"
                   person.last_login_at = Time.zone.parse(user[:logged_in_at]) if user[:logged_in_at].present?
                 
                   # Favorites
                   user[:favorites].each { |f| person.add_favorite(HTMLEntities.new.decode(f[:name]), f[:url]) }
                 
                   # Settings
-                  # Privileges
-                  # Avatar
-                  # TODO
+                  user[:settings].each do |s|
+                    case s[:token]
+                    when 'background-color', 'hide-role-switcher', 'notify-by-email-frequency', 'desparkle', 'use-lite-version'
+                      #puts "Ignoring #{s[:token]}: #{s[:value]}"
+                    when 'allow-cma-contact'
+                      person.settings.allow_bb_cma_contact = (s[:value] == 'true')
+                    when 'nyan-cursor'
+                      person.settings.enable_nyan_cursor = (s[:value] == 'yes')
+                    else
+                      raise "ERROR: Unknown settings: #{s[:token]} = #{s[:value]}"
+                    end
+                  end
+                  
+                  # TODO: Privileges
+                  user[:privileges].each do |s|
+                    person.flags.add(s[:token])
+                    # case s[:token]
+#                     when 'admin'
+#                       puts "admin!"
+#                     when 'admin-links'
+#                       # do nothing
+#                     else
+#                       raise "ERROR: Unknown privilege: #{s[:token]}"
+#                     end
+                  end
+                  
+                  
+                  # TODO: Avatar
                 
                   person.save!
                 else

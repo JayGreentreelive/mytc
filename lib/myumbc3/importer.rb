@@ -6,7 +6,7 @@ module Myumbc3
   module Importer
     
     def self.reset
-      UserImporter.reset
+      #UserImporter.reset
       GroupImporter.reset
     end
     
@@ -30,7 +30,7 @@ module Myumbc3
       
       output_file = File.new('tmp/importer.out', 'w')
       
-      UserImporter.import(output_file)
+      #UserImporter.import(output_file)
       GroupImporter.import(output_file)
       
       output_file.close

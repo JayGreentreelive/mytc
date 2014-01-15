@@ -73,7 +73,7 @@ module Umbc
 
       # Role Checks
       def affiliations
-        multi_value(:affiliation).map(&:downcase).sort
+        multi_value(:affiliation).select { |a| a.present? }.map(&:downcase).uniq.compact.sort
       end
 
       def student?
@@ -154,7 +154,7 @@ module Umbc
       end
 
       def email_aliases
-        multi_value(:mailacceptinggeneralid).map { |e| "#{e}@umbc.edu".downcase }
+        multi_value(:mailacceptinggeneralid).select { |a| a.present? }.map { |e| "#{e}@umbc.edu".downcase }
       end
 
       def maildrop
@@ -237,11 +237,11 @@ module Umbc
 
       # Student Attributes
       def majors
-        multi_value(:umbcmajor).map &:upcase
+        multi_value(:umbcmajor).select { |a| a.present? }.map &:upcase
       end
 
       def minors
-        multi_value(:umbcminor).map &:upcase
+        multi_value(:umbcminor).select { |a| a.present? }.map &:upcase
       end
 
       def standing

@@ -14,11 +14,13 @@ class Person < Entity
   field :display_email, type: String
   field :contact_email, type: String
   field :birthday, type: Date
+  #field :settings, type: PersonSettings, default: ->{ PersonSettings.new }
   field :last_login_at, type: DateTime
   field :last_sync_at, type: DateTime
   
   # Relations
   embeds_many :favorites, class_name: 'PersonFavorite'
+  embeds_one :settings, class_name: 'PersonSettings', autobuild: true
   
   # Indexes
   #index({ eppn: 1 }, { sparse: true, unique: true })

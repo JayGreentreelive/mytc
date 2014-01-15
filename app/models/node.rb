@@ -3,8 +3,10 @@ class Node
   include RandomId
   include Sluggable
   include Visible
+  include Flaggable
   
-  embeds_many :postings
+  #embeds_many :postings
+  
   
   
 end

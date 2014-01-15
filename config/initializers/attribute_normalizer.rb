@@ -28,6 +28,14 @@ AttributeNormalizer.configure do |config|
       nil
     end
   end
+  
+  config.normalizers[:slugify] = lambda do |value, options|
+    Utils::Slugger.slugify(value)
+  end
+  
+  config.normalizers[:uniq] = lambda do |value, options|
+    value.uniq if value.respond_to?(:uniq)
+  end
 
   # The default normalizers if no :with option or block is given is to apply the :strip and :blank normalizers (in that order).
   # You can change this if you would like as follows:

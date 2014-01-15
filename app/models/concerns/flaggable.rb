@@ -6,29 +6,12 @@ module Flaggable
     validates :flags, array: { presence: true, format: { with: Utils::Slugger::SLUG_REGEX } } 
   end
 
-  # Class Methods
-  module ClassMethods
-  end
-
-  # Instance Methods
-  def add_flag(fl)
-    fl = Utils::Slugger.slugify(fl)
-    self.flags_will_change!
-    self.flags << fl unless self.has_flag?(fl)
-    fl
+  # Instance Methods  
+  def flags=(fl)
+    Utils::SlugCollection.new(self, :flags).set(fl)
   end
   
-  def remove_flag(fl)
-    fl = Utils::Slugger.slugify(fl)
-    self.flags_will_change!
-    self.flags.delete(fl)
-    fl
+  def flags
+    Utils::SlugCollection.new(self, :flags)
   end
-  
-  def has_flag?(fl)
-    fl = Utils::Slugger.slugify(fl)
-    self.flags.include? fl
-  end
-
-  private
 end

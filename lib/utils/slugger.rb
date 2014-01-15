@@ -9,6 +9,10 @@ module Utils
     end
 
     def self.slugify(obj, sep = SLUG_SEPARATOR)
+      if obj.is_a? Enumerable
+        return obj.map { |o| Utils::Slugger.slugify(o) }
+      end
+      
       if obj.blank?
         raise ArgumentError.new 'Cannot sluggify a blank object'
       end

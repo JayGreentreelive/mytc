@@ -2,7 +2,7 @@
 # http://stackoverflow.com/questions/5669496/how-do-i-validate-members-of-an-array-field
 class ArrayValidator < ActiveModel::EachValidator
   def validate_each(record, attribute, values)
-    [values].flatten.each do |value|
+    [values.to_a].flatten.each do |value|
       options.each do |key, args|
         validator_options = { attributes: attribute }
         validator_options.merge!(args) if args.is_a?(Hash)

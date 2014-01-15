@@ -5,27 +5,27 @@ module RandomId
   extend ActiveSupport::Concern
 
   included do
-    field :_id, type: String, default: -> { self.generate_id }, pre_processed: true
+    field :_id, type: String, default: -> { self._generate_id }, pre_processed: true
 
-    before_create :ensure_unique_id
+    before_create :_ensure_unique_id
   end
 
   protected
 
-  def generate_id
+  def _generate_id
     Utils::IdGenerator.generate(DEFAULT_ID_LENGTH)
   end
 
   private
 
-  def ensure_unique_id
+  def _ensure_unique_id
     if self.embedded?
       while self.send(self.metadata.inverse).send(self.metadata.name).where(id: self.id).length > 1
-        self.id = self.generate_id
+        self.id = self._generate_id
       end
     else
-      while self.class.find_by(id: self.id).present?
-        self.id = self.generate_id
+      while self.class.where(id: self.id).first.present?
+        self.id = self._generate_id
       end
     end
   end

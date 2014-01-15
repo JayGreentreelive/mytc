@@ -5,11 +5,11 @@ module Treeable
   extend ActiveSupport::Concern
 
   included do
-    field :tree, type: Array, default: []
+    field :_path, type: Array, default: []
     
-    #index({ tree: 1 }, { sparse: true })
+    #index({ _path: 1 }, { sparse: true })
     
-    validate :_validate_tree
+    validate :_validate_path
   end
   
   # Class Methods
@@ -21,36 +21,36 @@ module Treeable
   end
   
   def root
-    if self.tree.first
-      _tree_query_base.where(id: self.tree.first).first
+    if self._path.first
+      _path_query_base.where(id: self._path.first).first
     else
       self
     end
   end
   
   def depth
-    self.tree.length
+    self._path.length
   end
   
   def parent
-    if tree.blank?
+    if _path.blank?
       nil
     else
-      _tree_query_base.where(id: self.tree.last).first
+      _path_query_base.where(id: self._path.last).first
     end
   end
   
   def parent=(par)
-    self.tree_will_change!
+    self._path_will_change!
     if par
-      self.tree = par.tree + [par.id]
+      self._path = par._path + [par.id]
     else
-      self.tree = []
+      self._path = []
     end
   end
   
   def children
-    _tree_query_base.where(tree: self.tree + [self.id])
+    _path_query_base.where(_path: self._path + [self.id])
   end
   
   def leaf?
@@ -58,44 +58,49 @@ module Treeable
   end
   
   def siblings
-    self.siblings_and_self - [self]
+    self.siblings_and_self.where(:id.ne => self.id)
+    #self.siblings_and_self - [self]
   end
   
   def siblings_and_self
-    self.root? ? [self] : _tree_query_base.where(tree: self.tree)
+    _path_query_base.all(_path: self._path)
+    #self.root? ? [self] : _path_query_base.where(_path: self._path)
   end
   
   def sibling_of?(other)
-    other.tree == self.tree
+    other._path == self._path
   end
   
   def ancestors
-    _tree_query_base.in(id: self.tree)
+    _path_query_base.in(id: self._path)
   end
   
   def ancestors_and_self
-    [self] + self.anscestors
+    _path_query_base.in(id: (self._path + [self.id]))
+    #[self] + self.anscestors
   end
   
   def ancestor_of?(other)
-    other.tree.include?(self.id)
+    other._path.include?(self.id)
   end
   
   def descendants
-    _tree_query_base.where(tree: self.id)
+    _path_query_base.all(_path: self._path + [self.id])
+    #_path_query_base.where(_path: self.id)
   end
   
   def descendants_and_self
-    [self] + self.descendants
+    _path_query_base.or({ :_path.all => (self._path + [self.id]) }, { :id => self.id })
+    #[self] + self.descendants
   end
   
   def descendant_of?(other)
-    self.tree.include?(other.id)
+    self._path.include?(other.id)
   end
 
   private
 
-  def _tree_query_base
+  def _path_query_base
     if self.embedded?
       self.send(self.metadata.inverse).send(self.metadata.name).type(self.class)
     else
@@ -103,10 +108,10 @@ module Treeable
     end
   end
   
-  def _validate_tree
-    if self.tree.present?
-      if self.ancestors.length != self.tree.length
-        errors.add(:tree, 'contains invalid parent ids')
+  def _validate_path
+    if self._path.present?
+      if self.ancestors.length != self._path.length
+        errors.add(:_path, 'contains invalid parent ids')
       end
     end
   end
