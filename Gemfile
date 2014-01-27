@@ -60,3 +60,9 @@ gem 'attribute_normalizer'
 
 # Nokogiri, the best for XML parsing
 gem 'nokogiri'
+
+# Slim templating language, much faster than haml
+gem 'slim'
+
+# Dalli is the updated memcache gem
+gem 'dalli'

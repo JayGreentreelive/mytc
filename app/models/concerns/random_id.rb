@@ -7,7 +7,7 @@ module RandomId
   included do
     field :_id, type: String, default: -> { self._generate_id }, pre_processed: true
 
-    before_create :_ensure_unique_id
+    #before_create :_ensure_unique_id
   end
 
   protected

@@ -2,7 +2,7 @@ module Myumbc3
   module Importer
     module GroupImporter
       
-      API_URL = 'https://dev.my.umbc.edu/admin/export/groups.json'
+      API_URL = 'https://my.umbc.edu/admin/export/groups.json'
       
       def self.reset
         Group.delete_all
@@ -22,6 +22,7 @@ module Myumbc3
     
       def self.entity_cache(my3_id)
         if !@entity_cache[my3_id]
+          puts "Loading #{my3_id}"
           @entity_cache[my3_id] = Entity.find_by_slug(my3_id)
         end
         @entity_cache[my3_id]
@@ -61,7 +62,9 @@ module Myumbc3
             
             # Slug
             new_group.slugs.add "my3-group-#{old_group[:id]}"
-            if new_group.status == :active
+            if old_group[:kind] == 'retired'
+              # no slug
+            elsif new_group.status == :active
               new_group.slug = old_group[:token]
             end
             
@@ -85,22 +88,30 @@ module Myumbc3
             open = old_group[:membership] == 'open'
 
             if public
-              #new_group.visbility.add('public')
+              new_group.access = :public #new_group.visbility.add('public')
             end
             
             #####
             # Tools -> Categories
+            
+            any_anyone_tools = false
+            any_member_tools = false
+            
             old_group[:group_tools].sort_by { |t| t[:position] }.each do |tool|
               
               if tool[:write_access] == 'admin'
                 posting = :admins
-              elsif open && (tool[:write_access] == 'member')
-                posting = :open
-              elsif public && !open
-                posting = :members
               elsif !public
                 posting = :members
+                any_member_tools = true
+              elsif open && (tool[:write_access] == 'member')
+                posting = :anyone
+                any_anyone_tools = true
+              elsif public && !open
+                posting = :members
+                any_member_tools = true
               else
+                puts old_group[:token]
                 raise "Unknown posting scenario"
               end
               
@@ -113,21 +124,26 @@ module Myumbc3
                 # Ignore
               when 'news'
                 if tool[:enabled] == true
-                  new_group.posts.categories.add('News', format: :list, posting: posting)
+                  c = new_group.posts.categories.add('News', format: :list, posting: posting)
+                  c.slugs.add 'my3-news'
                 end
-                new_group.posts.posting = posting
+                new_group.posts.posting = (posting == :admins) ? posting : :members
               when 'events'
+                new_group.events.slugs.add 'my3-events'
                 new_group.events.posting = posting
               when 'discussions'
                 if tool[:enabled] == true
-                  new_group.posts.categories.add('Discussions', format: :forum, posting: posting)
+                  c = new_group.posts.categories.add('Discussions', format: :forum, posting: posting)
+                  c.slugs.add 'my3-discussions'
                 end
               when 'media'
                 if tool[:enabled] == true
-                  new_group.posts.categories.add('Media', format: :gallery, posting: posting)
+                  c = new_group.posts.categories.add('Media', format: :gallery, posting: posting)
+                  c.slugs.add 'my3-media'
                 end
               when 'documents'
-                new_group.library.posting = posting
+                new_group.library.posting = (posting == :admins) ? posting : :members
+                new_group.library.slugs.add 'my3-documents'
               when 'members'
                 if tool[:read_access] == 'anyone'
                   new_group.show_members = :anyone
@@ -137,7 +153,8 @@ module Myumbc3
               when 'settings'
                 # Ignore
               when 'spotlights'
-                new_group.posts.categories.add('Spotlights Archive', format: :list, posting: posting)
+                c = new_group.posts.categories.add('Spotlights Archive', format: :list, posting: posting)
+                c.slugs.add 'my3-spotlights'
               when 'statuses'
                 # Ignore
               end
@@ -145,13 +162,31 @@ module Myumbc3
             
             # Documents
             old_group[:group_document_folders].each do |f|
-              new_group.library.folders.add(f[:title])
+              f = new_group.library.folders.add(f[:title])
+              f.slugs.add "my3-documents-#{f[:id]}"
             end
             
             
             # Group Memberships
+            member_slugs = old_group[:group_members].map{ |gm| "my3-user-#{gm[:user_id]}" }
+            member_entities = Entity.in(slugs: member_slugs)
+            
+            es = {}
+            member_entities.each do |me|
+              me.slugs.each do |s|
+                es[s] = me
+              end
+            end
+            
+            #puts "Merging..."
+            @entity_cache ||= {}          
+            @entity_cache = @entity_cache.merge(es)
+            #puts @entity_cache
+            #return
+            
             old_group[:group_members].each do |gm|
               e = self.entity_cache("my3-user-#{gm[:user_id]}")
+              #e = es["my3-user-#{gm[:user_id]}"]
               
               if e.present?
                 nots = (gm[:watching] ? 'important' : 'none')
@@ -181,7 +216,18 @@ module Myumbc3
                     creator = self.entity_cache("my3-user-#{gm[:joined_by_id]}")
                     raise "Could not find creator: #{gm[:joined_by_id]}" if creator.nil?
                     #new_gm.created_by_id = creator.id
-                    new_group.memberships.add(e, { created_at: gm[:joined_at], notifications: nots, admin: ((gm[:role] == 'owner') || (gm[:role] == 'admin')), locked: gm[:auto], title: gm[:title], email: gm[:email], created_by: creator})
+                    
+                    if (gm[:role] == 'member') && (gm[:auto] == false) && (gm[:officer] == false) && open && (any_anyone_tools || !any_member_tools) && (gm[:invited_by_id] == gm[:user_id])
+                      new_group.followerships.add(e, { notifications: nots, created_at: gm[:joined_at], created_by: e })
+                    else
+                      new_group.memberships.add(e, { created_at: gm[:joined_at], notifications: nots, admin: ((gm[:role] == 'owner') || (gm[:role] == 'admin')), locked: (gm[:auto] == true), officer: (gm[:officer] == true), title: gm[:title], email: gm[:email], created_by: creator})
+                    end
+                    #if ((gm[:role] == 'owner') || (gm[:role] == 'admin')) || !any_open_tools
+                      
+                      #else
+                      #new_group.followerships.add(e, { notifications: nots, created_at: gm[:joined_at], created_by: e })
+                      #end
+                    
                   when 'follower'
                     #new_gm = GroupFollowership.new
                     #new_gm.entity_id = e.id
@@ -205,8 +251,15 @@ module Myumbc3
             #puts "#{new_group.name}"
             new_group.save!
             
+            # Force the slug to the id (but can only do after save)
+            if (old_group[:kind] == 'retired') || (new_group.status != :active)
+             new_group.slug = new_group.id
+             new_group.save!
+            end
+            
             batch_import_count += 1
             total_import_count += 1
+            putc '.'
           end 
 
           Rails.logger.info "Batch #{page_number}: Added #{batch_import_count} groups... TOTAL: #{total_import_count}"

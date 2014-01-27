@@ -13,10 +13,11 @@ class GroupCategory
   include RandomId
   include Nillable
   include Treeable
+  include Sluggable
   
   DEFAULT_NAME = 'New Category'
   
-  POSTING_OPEN = :open
+  POSTING_ANYONE = :anyone
   POSTING_MEMBERS  = :members
   POSTING_ADMINS = :admins
   POSTING_INHERIT = :inherit
@@ -24,7 +25,7 @@ class GroupCategory
   field :name, type: String, default: -> { self.class::DEFAULT_NAME }
   field :posting, type: Symbol, default: POSTING_MEMBERS
   
-  validates :posting, inclusion: { in: [POSTING_OPEN, POSTING_MEMBERS, POSTING_ADMINS, POSTING_INHERIT] }
+  validates :posting, inclusion: { in: [POSTING_ANYONE, POSTING_MEMBERS, POSTING_ADMINS, POSTING_INHERIT] }
   
   normalize_attribute :name, with: [:blank, :squish]
   

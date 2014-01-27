@@ -23,7 +23,7 @@ module Sluggable
 
     def find_by_slug(sl)
       sl = Utils::Slugger.slugify(sl)
-      self.in(slugs: sl).first
+      self.where(slugs: sl).first
     end
   end
 

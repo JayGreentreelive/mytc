@@ -115,6 +115,7 @@ class GroupPostCategory < GroupCategory
       end
       c = @category.group.group_categories.build({ name: name, format: format, posting: posting, parent: @category }, GroupPostCategory)
       @category.group.post_category_order = [@category.group.post_category_order + [c.id]].flatten
+      c
     end
     
     # Remove the category (passed) with the specified dependents strategy

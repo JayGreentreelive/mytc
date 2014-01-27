@@ -11,7 +11,7 @@ module Myumbc3
       def self.import(output_file)
         use_ldap = true
         page_number = 1
-        page_size = 5000
+        page_size = 1000
         total_import_count = 0
           
         begin
@@ -88,6 +88,7 @@ module Myumbc3
                 end
                 batch_import_count += 1
                 total_import_count += 1
+                putc '.'
               
               else # if user[:eppn].match(/@umbc.edu/)
                 output_file.write "NOT IMPORTING: #{user[:eppn]}\n"

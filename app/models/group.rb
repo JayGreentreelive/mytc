@@ -18,6 +18,9 @@ class Group < Entity
   KIND_INTEREST = :interest
   KIND_LEGACY = :legacy
   
+  ACCESS_PRIVATE = :private
+  ACCESS_PUBLIC = :public
+  
   SHOW_MEMBERS_ANYONE = :anyone
   SHOW_MEMBERS_MEMBERS = :members
   SHOW_MEMBERS_ADMINS = :admins
@@ -25,10 +28,13 @@ class Group < Entity
   # Fields
   field :status, type: Symbol, default: STATUS_PENDING
   field :kind, type: Symbol, default: KIND_COMMUNITY
+  field :access, type: Symbol, default: ACCESS_PRIVATE
   field :tagline, type: String
   field :description, type: String
   field :analytics_id, type: String
   field :show_members, type: Symbol, default: SHOW_MEMBERS_ANYONE
+  
+  field :sorted_name, type: String
   
   # Relations
   belongs_to :created_by, class_name: 'Entity'
@@ -44,6 +50,7 @@ class Group < Entity
   # Validations
   validates :status, inclusion: { in: [STATUS_PENDING, STATUS_DENIED, STATUS_ACTIVE, STATUS_RETIRED] }
   validates :kind, inclusion: { in: [KIND_COMMUNITY, KIND_DEPARTMENT, KIND_STUDENTORG, KIND_WORKGROUP, KIND_INSTITUTIONAL, KIND_INTEREST, KIND_LEGACY] }
+  validates :access, inclusion: { in: [ACCESS_PUBLIC, ACCESS_PRIVATE] }
   validates :tagline, allow_nil: true, presence: true
   validates :description, allow_nil: true, presence: true
   validates :analytics_id, allow_nil: true, presence: true
@@ -52,6 +59,7 @@ class Group < Entity
   
   # Callbacks
   after_initialize :_setup_new_group
+  before_save :_set_sorted_name
   
   #####
   # Class Methods
@@ -126,6 +134,10 @@ class Group < Entity
   
   def _validate_show_members
     # if group.public?
+  end
+  
+  def _set_sorted_name
+    self.sorted_name = ActiveSupport::Inflector.parameterize("#{ActiveSupport::Inflector.transliterate(self.name).downcase}", '').gsub(/[^a-z]/i, '').concat("-#{self.id}")
   end
   
   def _setup_new_group

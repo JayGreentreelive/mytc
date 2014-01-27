@@ -1,0 +1,81 @@
+h1.group-name
+  - if @group.access == :private
+    '🔒
+  - else
+    '🌎
+  = @group.name
+h2.group-tagline= @group.tagline
+div= link_to 'myUMBC 3 Version', "http://my.umbc.edu/groups/#{@group.slug}", target: '_blank'
+div= @group.description
+h3 Navigation
+ul
+  li
+    - p = @group.posts
+    = p.name
+    ' 
+    span style="color: #bbb;" (#{p.posting})
+    '
+    span style="color: #bbb;" [#{p.format}]
+    ul
+      - @group.posts.categories.each do |cat|
+        li
+          = cat.name
+          ' 
+          span style="color: #bbb;" (#{cat.posting})
+          '
+          span style="color: #bbb;" [#{cat.format}]
+  li
+    - p = @group.events
+    = p.name
+    ' 
+    span style="color: #bbb;" (#{p.posting})
+  li
+    - p = @group.library
+    = p.name
+    ' 
+    span style="color: #bbb;" (#{p.posting})
+    ul
+      - @group.library.folders.each do |f|
+        li
+          = f.name
+          ' 
+          span style="color: #bbb;" (#{f.posting})
+  
+- cache("group-details-#{@group.id}-#{@group.updated_at.to_i}") do
+  
+  h3 People (#{@group.group_relationships.length})
+     
+  h4 Admins
+  ul style="-webkit-column-count:3;"
+    - @group.memberships(admin: true).entities.sort_by(&:sorted_name).each do |e|
+      li
+        ' #{e.name}
+        span style="color: #bbb; font-size: .8em;" #{e.display_email}
+  
+  h4 Officers
+  ul style="-webkit-column-count:3;"
+    - @group.memberships(officer: true).entities.sort_by(&:sorted_name).each do |e|
+      li
+        ' #{e.name}
+        span style="color: #bbb; font-size: .8em;" #{e.display_email}
+    
+  h4 Members
+  ul style="-webkit-column-count:3;"
+    - @group.memberships(admin: false, officer: false).includes(:entity).sort_by { |m| m.entity.sorted_name }.each do |e|
+      li style="white-space: nowrap;"
+        ' #{e.entity.name}
+        - if e.locked == true
+          ' 🔒
+        span style="color: #bbb; font-size: .8em;" #{e.entity.display_email}
+   
+  -if !@group.followerships.empty?    
+    h4 Followers
+    ul style="-webkit-column-count:3;"
+      - @group.followerships.entities.sort_by(&:sorted_name).each do |e|
+        li
+          ' #{e.name}
+          span style="color: #bbb; font-size: .8em;" #{e.display_email}
+
+/- cache("group-json-#{@group.id}-#{@group.updated_at.to_i}") do
+  pre= JSON.pretty_generate(JSON.parse(@group.to_json))
+  

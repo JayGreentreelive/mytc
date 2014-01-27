@@ -35,8 +35,32 @@ class UmbcPerson < Person
   end
     
   def self.find_or_setup(eppn, data = nil)
-    person = self.find_or_initialize_by(eppn: eppn)
-    person.sync!(data) if person.new_record?
+    eppn = eppn.downcase
+    person = self.where(eppn: eppn).first
+    
+    # IF there is already a person, simply return them
+    if !person
+      # Check LDAP for anyone that may have used this EPPN before
+      ldap_person = Umbc::Ldap::Person.find_by_any_eppn(eppn)
+      
+      if ldap_person && ldap_person.merged?
+        person = self.in(umbc_campus_id: ldap_person.all_campus_ids).first
+        
+        if person
+          person.sync!(ldap_person)
+        else
+          person = self.find_or_initialize_by(eppn: ldap_person.eppn)
+          person.sync!(ldap_person) if person.new_record?
+        end
+
+      elsif ldap_person
+        person = self.new(eppn: ldap_person.eppn)
+        person.sync!(ldap_person)
+      else
+        raise "Login by Invalid UMBC Person"
+      end
+    end
+    
     person
   end
   
@@ -57,6 +81,7 @@ class UmbcPerson < Person
   private
   
   def update_with_ldap_data(ldap_person)
+    self.eppn = ldap_person.eppn
     self.name = ldap_person.name
     self.first_name = ldap_person.nickname
     self.last_name = ldap_person.last_name

@@ -7,6 +7,7 @@ class GroupRelationshipCollection
   def entities
     if _memberships.length > 0
       _memberships.includes(:entity).map(&:entity)
+      #_memberships.map(&:entity)
     else
       []
     end

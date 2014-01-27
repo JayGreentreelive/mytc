@@ -7,6 +7,11 @@ module Umbc
       PRIVACY_LIMIT = 2
       
       ## Finders
+      def self.find_by_any_eppn(eppn)
+        usr = eppn.split('@')[0]
+        Umbc::Ldap.find_people(any_campus_id: usr).first
+      end
+      
       def self.find_by_eppn(eppn)
         usr = eppn.split('@')[0]
         Umbc::Ldap.find_people(campus_id: usr).first
@@ -14,6 +19,10 @@ module Umbc
       
       def self.find_by_username(usr)
         Umbc::Ldap.find_people(username: usr).first
+      end
+
+      def self.find_by_any_campus_id(cid)
+        Umbc::Ldap.find_people(any_campus_id: cid).first
       end
 
       def self.find_by_campus_id(cid)
@@ -49,6 +58,14 @@ module Umbc
 
       def alternate_campus_ids
         multi_value :umbcalternatecampusid
+      end
+      
+      def all_campus_ids
+        self.alternate_campus_ids + [self.campus_id]
+      end
+      
+      def merged?
+        self.alternate_campus_ids.present?
       end
 
       def empl_id
