@@ -19,4 +19,12 @@ namespace :myumbc3 do
     end
   end
   
+  namespace :news do
+    desc "Dump the news data into a json file"
+    task :dump, [:news_id] => :environment do |t, args|
+      require 'myumbc3/importer'
+      Myumbc3::Importer::ContentImporter.dump(args.news_id)
+    end
+  end
+  
 end

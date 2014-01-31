@@ -76,8 +76,11 @@ class GroupPostCategory < GroupCategory
   
   class ItemCollection
     def initialize(cat, options = {})
+      
+      default_options = { page_size: 10, page: 1 }
+      
       @category = cat
-      @find_options = options
+      @find_options = default_options.merge(options)
     end
     
     def add();end
@@ -86,11 +89,120 @@ class GroupPostCategory < GroupCategory
     def inspect
       found_items.inspect
     end
+    
+    def ids
+      found_ids
+    end
+    
+    def stats
+      
+      # RAW MONGODB -- db.nodes.aggregate({ $match: { postings : { $elemMatch : { 'target_id' : 'snt4z7hkc8', 'category_id' : '2e3un4fp1o' } } } }, { $project : { _id: 1, postings: 1 } }, { $unwind : '$postings' }, { $match : { 'postings.target_id' : 'snt4z7hkc8', 'postings.category_id' : '2e3un4fp1o' } }, { $project : { _id: 1, target_id: '$postings.target_id', category_id: '$postings.category_id', at: '$postings.at' } }, { $group : { _id: { target_id: '$target_id', category_id: '$category_id' }, "count" : { $sum : 1 }, "newest" : { $max : '$at' }, "oldest" : { $min : '$at' } } } )
+      
+      stats = Node.collection.aggregate({
+          '$match' => {
+            'postings' => {
+              '$elemMatch' => {
+                'target_id' => @category.group.id,
+                'category_id' => @category.id
+              }
+            }
+          }
+        }, {
+          '$project' => {
+            '_id' => 1,
+            'postings' => 1
+          }
+        }, {
+          '$unwind' => '$postings'
+        }, {
+          '$match' => {
+            'postings.target_id' => @category.group.id,
+            'postings.category_id' => @category.id
+          }
+        }, {
+          '$project' => {
+            '_id' => 1,
+            'target_id' => '$postings.target_id',
+            'category_id' => '$postings.category_id',
+            'at' => '$postings.at'
+          }
+        }, {
+          '$group' => {
+            '_id' => {
+              'target_id' => '$target_id',
+              'category_id' => '$category_id'
+            },
+            'count' => {
+              '$sum' => 1
+            },
+            'newest' => {
+              '$max' => '$at'
+            },
+            'oldest' => {
+              '$min' => '$at'
+            }
+          }
+        })
+        if stats.present?
+          stats = { count: stats.first['count'], newest: stats.first['newest'], oldest: stats.first['oldest'] }
+        else
+          stats = { count: 0, newest: nil, oldest: nil }
+        end
+        stats
+    end
 
     private
-        
+    
+    def found_ids
+      
+      # RAW MONGODB -- db.nodes.aggregate({ $match: { postings : { $elemMatch : { 'target_id' : 'snt4z7hkc8', 'category_id' : '2e3un4fp1o' } } } }, { $project : { _id: 1, postings: 1 } }, { $unwind : '$postings' }, { $match : { 'postings.target_id' : 'snt4z7hkc8', 'postings.category_id' : '2e3un4fp1o' } }, { $project : { _id: 1, target_id: '$postings.target_id', category_id: '$postings.category_id', at: '$postings.at' } }, { $sort : { 'at' : -1 } }, { $skip: 0 }, { $limit: 10 } )
+      
+      @found_ids ||= Node.collection.aggregate({
+          '$match' => {
+            'postings' => {
+              '$elemMatch' => {
+                'target_id' => @category.group.id,
+                'category_id' => @category.id
+              }
+            }
+          }
+        }, {
+          '$project' => {
+            '_id' => 1,
+            'postings' => 1
+          }
+        }, {
+          '$unwind' => '$postings'
+        }, {
+          '$match' => {
+            'postings.target_id' => @category.group.id,
+            'postings.category_id' => @category.id
+          }
+        }, {
+          '$project' => {
+            '_id' => 1,
+            'target_id' => '$postings.target_id',
+            'category_id' => '$postings.category_id',
+            'at' => '$postings.at'
+          }
+        }, {
+          '$sort' => {
+            'at' => -1
+          }
+        }, {
+          '$skip' => @find_options[:page_size] * (@find_options[:page] - 1)
+        }, {
+          '$limit' =>  @find_options[:page_size]
+        }).map { |i| i['_id'] }
+    end
+    
     def found_items
-      @found_items ||= ['WHOO', 'NELLY', @find_options.to_s]
+      #if @found_items.present?
+        items = Post.includes(:owner, :author).find(found_ids)
+        @found_items = found_ids.map { |i| items.find { |m| m.id == i } }
+        #else
+        #@found_items
+        #end
     end
         
     def method_missing(method, *args, &block)
@@ -141,6 +253,10 @@ class GroupPostCategory < GroupCategory
       found_items.map(&:id)
     end
     
+    def ordered
+      @category.group.post_category_order.map { |i| @category.children.find(i) }
+    end
+    
     private
     
     def initialize(cat, options = {})
@@ -148,7 +264,7 @@ class GroupPostCategory < GroupCategory
     end
     
     def found_items
-      @found_items ||= @category.group.post_category_order.map { |i| @category.children.find(i) }
+      @category.children
     end
     
     def method_missing(method, *args, &block)

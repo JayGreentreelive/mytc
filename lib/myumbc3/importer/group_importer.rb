@@ -27,9 +27,73 @@ module Myumbc3
         end
         @entity_cache[my3_id]
       end
+      
+      def self.setup_topic_groups
+        topics = {
+          admissions_and_orientation: "Admissions & Orientation",
+          advising_and_student_support: "Advising & Student Support",
+          arts_culture_and_entertainment: "Arts, Culture & Entertainment",
+          athletics_and_recreation: "Athletics & Recreation",
+          billing_and_personal_finances: "Billing & Personal Finances",
+          books_goods_and_services: "Books, Goods & Services",
+          classes_and_grades: "Classes & Grades",
+          community_news_and_opinion: "Community News & Opinion",
+          computing_and_technology: "Computing & Technology",
+          diversity: "Diversity",
+          facilities_and_operations: "Facilities & Operations",
+          financial_services_and_accounting: "Financial Services & Accounting",
+          food_and_dining: "Food & Dining",
+          health_wellness_and_safety: "Health, Wellness & Safety",
+          housing_on_and_off_campus: "Housing (On & Off Campus)",
+          human_resources: "Human Resources",
+          involvement_and_leadership: "Involvement & Leadership",
+          jobs_and_internships: "Jobs & Internships",
+          library: "Library",
+          myumbc: "myUMBC",
+          parking_and_transportation: "Parking & Transportation",
+          professional_development: "Professional Development",
+          research_and_grants: "Research & Grants",
+          teaching_and_learning: "Teaching & Learning"
+        }
+        
+        topics.keys.each do |topic|
+          new_group = Group.new
+          new_group.status = :active
+          new_group.slug = "my3-topic-#{topic}"
+          new_group.name = topics[topic]
+          new_group.description = "An archive of posts made in past version of myUMBC"
+          new_group.created_at = Time.zone.now
+          new_group.kind = :legacy
+          new_group.access = :public
+          
+          c = new_group.posts.categories.add('News', format: :list, posting: :members)
+          c.slugs.add 'my3-news'
+          
+          c = new_group.posts.categories.add('Discussions', format: :forum, posting: :members)
+          c.slugs.add 'my3-discussions'
+          
+          c = new_group.posts.categories.add('Media', format: :gallery, posting: :members)
+          c.slugs.add 'my3-media'
+          
+          c = new_group.posts.categories.add('Spotlights Archive', format: :list, posting: :members)
+          c.slugs.add 'my3-spotlights'
+          
+          new_group.events.posting = :members
+          new_group.events.slugs.add 'my3-events'
+          
+          new_group.library.posting = :members
+          
+          new_group.show_members = :members
+          
+          new_group.save!
+          Rails.logger.info "Topic: #{new_group.slug} added..." 
+        end
+      end
     
       def self.import(output_file)
         self.reset
+        self.setup_topic_groups
+        
         page_number = 1
         page_size = 10
         total_import_count = 0

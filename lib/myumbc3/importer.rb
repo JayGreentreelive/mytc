@@ -1,13 +1,15 @@
 require 'awesome_print'
 require 'myumbc3/importer/user_importer'
 require 'myumbc3/importer/group_importer'
+require 'myumbc3/importer/content_importer'
 
 module Myumbc3
   module Importer
     
     def self.reset
-      UserImporter.reset
-      GroupImporter.reset
+      #UserImporter.reset
+      #GroupImporter.reset
+      ContentImporter.reset
     end
     
     def self.import
@@ -30,8 +32,9 @@ module Myumbc3
       
       output_file = File.new('tmp/importer.out', 'w')
       
-      UserImporter.import(output_file)
-      GroupImporter.import(output_file)
+      #UserImporter.import(output_file)
+      #GroupImporter.import(output_file)
+      ContentImporter.import(output_file)
       
       output_file.close
       

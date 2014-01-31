@@ -6,7 +6,10 @@ Myumbc4::Application.routes.draw do
   # root 'welcome#index'
 
   get 'groups' => 'group_home#index'
-  get 'groups/:group_slug(/:action)' => 'group_home#show'
+  get 'groups/:group_slug(/:action)' => 'group_home#show', as: :group
+  get 'groups/:group_slug/posts/categories/:category_id' => 'group_home#category', as: :group_category
+  get 'groups/:group_slug/posts/categories/:category_id/page/:page' => 'group_home#category', as: :group_category_page
+  get 'groups/:group_slug/posts/:post_id' => 'group_home#post_show', as: :group_post
 
   # Example of regular route:
   #   get 'products/:id' => 'catalog#view'

@@ -27,7 +27,7 @@ module Sluggable
     end
   end
 
-  # Instance Methods
+  # Instance Methods  
   def slug
     self.display_slug || self.slugs.first
   end

@@ -1,3 +1,4 @@
+div= link_to 'All Groups', groups_path
 h1.group-name
   - if @group.access == :private
     '🔒
@@ -19,7 +20,7 @@ ul
     ul
       - @group.posts.categories.each do |cat|
         li
-          = cat.name
+          = link_to cat.name, group_category_path(@group.slug, cat.id)
           ' 
           span style="color: #bbb;" (#{cat.posting})
           '

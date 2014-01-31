@@ -15,14 +15,22 @@ html
       .paging { float: right; }
       .page_link { margin-right: 12px; }
       .page_link.active { font-weight: 600;  }
-      h1,h2,h3,h4,h5,h6 { font-family: 'Roboto Slab' }
+      h1,h2,h3,h4,h5,h6 { font-family: 'Roboto Slab'; font-weight: 300; }
       .group-name { margin: 0; padding: 0; }
-      .group-tagline { margin: 0; padding: 0; color: #666; font-weight: normal; }
+      .group-tagline, .tagline { margin: 0; padding: 0; color: #666; font-weight: normal; }
       a { color: #07f; }
       a:visited { color: #04c; }
       td, th { white-space: nowrap; }
       th { text-align: left; }
       .error { color: #c00; }
+      ul.posts li + li { margin-top: 1em; }
+      ul.posts h3, ul.posts h4 { margin: 0; padding: 0; }
+      ul.posts .title { font-weight: 500; }
+      ul.posts .posted { font-size: .7em; color: #999; }
+      ul.posts .xpost { font-size: .7em; color: #999; }
+      ul.posts .tags { font-size: .7em; color: #999; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .post_title { margin: 0; padding: 0; }
+
     scss:
       tr.status-retired { td, a { color: #ccc; } }
       tr.status-denied { td, a { color: #c99; } }

@@ -1,17 +1,11 @@
 class Post < Node
   
-    include Treeable
-  
   field :title, type: String
+  field :tagline, type: String
   field :body, type: String
+  field :tags, type: Array, default: []
   
-  def self.treetest
-    freeman = self.create title: 'Freeman'
-    
-    jack = self.create title: 'Jack', parent: freeman    
-    john = self.create title: 'John', parent: jack    
-    jesse = self.create title: 'Jesse', parent: jack
-  end
-  
+  belongs_to :owner, class_name: 'Entity'
+  belongs_to :author, class_name: 'Entity'
   
 end

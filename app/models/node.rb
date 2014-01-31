@@ -4,9 +4,10 @@ class Node
   include Sluggable
   include Visible
   include Flaggable
+  include Treeable
   
-  #embeds_many :postings
+  field :access, type: Symbol, default: :public
   
-  
+  embeds_many :postings
   
 end
