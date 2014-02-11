@@ -2,16 +2,30 @@ module Myumbc3
   module Importer
     module UserImporter
       
-      API_URL = 'https://my.umbc.edu/admin/export/users.json'
+      API_URL = 'https://dev.my.umbc.edu/admin/export/users.json'
       
       def self.reset
         UmbcPerson.delete_all
       end
     
+      def self.dump(id)
+        ht = RestClient.post API_URL, key: UMBC_CONFIG[:myumbc3][:importer][:passkey], ids: id
+        js = JSON.parse(ht.to_str, symbolize_names: true).first
+        out = JSON.pretty_generate(js)
+        
+        output_file = File.new("tmp/user-#{js[:id]}.json", 'w')
+        output_file << out
+        output_file.close
+      end
+    
       def self.import(output_file)
+        
+        start = UmbcPerson.count
+        
         use_ldap = true
-        page_number = 1
         page_size = 1000
+        page_number = (start / page_size)
+        puts "#{start} existing... starting on page number #{page_number}"
         total_import_count = 0
           
         begin
@@ -26,6 +40,8 @@ module Myumbc3
         
           Umbc::Ldap.batch do |ldap|          
             user_data.each do |user|
+              
+              next if UmbcPerson.where(slugs: "my3-user-#{user[:id]}").first
           
               if user[:eppn].match(/@umbc.edu/)
                 if use_ldap
@@ -48,6 +64,11 @@ module Myumbc3
                   person = UmbcPerson.find_or_setup(user[:eppn], ldap_user)
                   person.slugs.add "my3-user-#{user[:id]}"
                   person.last_login_at = Time.zone.parse(user[:logged_in_at]) if user[:logged_in_at].present?
+                
+                
+                  if user[:avatar].present? && user[:avatar][:urls].present? && user[:avatar][:urls][:xxxlarge].present?
+                    person.avatar_url = "http://my.umbc.edu" + user[:avatar][:urls][:xxxlarge].to_s
+                  end
                 
                   # Favorites
                   user[:favorites].each { |f| person.add_favorite(HTMLEntities.new.decode(f[:name]), f[:url]) }

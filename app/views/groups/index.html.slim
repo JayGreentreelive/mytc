@@ -1,0 +1,69 @@
+- content_for(:html_head) do
+  scss:
+    #group-index.card {
+      margin: 1.2em;
+      min-height: 800px;
+    }
+    #group-listing {
+      overflow: hidden;
+      .col { float: left; width: 33%; margin: 0; padding: 0; }
+      position: relative;
+      margin: 0;
+      padding: 0;
+      .desc { color: #999; font-size: .8em; }
+      li { position: relative; list-style: none; margin: 0 .5em .5em 0; overflow: hidden; }
+      //.avatar { display: table-cell; font-family: 'Roboto Condensed'; background-color: #fff; width: 48px; height: 48px; line-height: 48px; color: #FFF; text-align: center; border-radius: 0px; background-size: cover;}
+      .avatar { height: 48px; width: 48px; display: block; float: left; 
+        
+        .initials { line-height: 48px; font-size: 24px; display: block; margin: 0 auto; text-align: center;}
+      }
+      .details { vertical-align: middle;  padding-left: .5em; width: 75%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+      .link { }
+      .desc { }
+    }
+    #paging {
+      margin: 0 0 1em 0;
+      padding: 0; 
+      li { margin: 0; padding: 0; list-style: none; display: inline-block; }
+      li.active { background-color: #ddd; }
+      a { display: inline-block; padding: .5em; }
+      a:hover { color: #C33; background-color: #f6f6f6; }
+    }
+
+#group-index.card
+  h1 Groups
+  p
+    | [insert a description of myUMBC groups and why they're super cool]
+  h2= link_to 'Make a Group', new_group_path
+  h2 Group Listing (#{@groups.count})
+  
+  - pages = %w(A B C D E F G H I J K L M N O P Q R S T U V W X Y Z #)
+  ul#paging
+    - pages.each do |p|
+      li class="#{@letter == p ? 'active' : '' }"
+        = link_to p, groups_path(letter: p)
+    
+  #group-listing
+    - @groups.all.in_groups(3, false) do |gs|
+      ul.col
+        - gs.each do |group|
+          li
+            =entity_avatar(group)
+            .details
+              .link= link_to group.name, group_path(group)
+
+              .desc
+                /= group.access.to_s.titleize
+                /'  &middot;
+                = entity_desc(group)
+                /'  &middot;
+                /' #{pluralize(group.memberships.count + group.followerships.count, 'person')}
+
+
+  .dev-notes
+    ul
+      li Search form for groups
+      li Directory the active groups in the system
+      li Link to the form to create new groups
+      li Explain what groups are and why you want them
+      li Showcase some exising groups

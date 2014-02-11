@@ -2,14 +2,14 @@ module Myumbc3
   module Importer
     module ContentImporter
       
-      API_URL = 'https://my.umbc.edu/admin/export/news.json'
+      API_BASE = 'https://dev.my.umbc.edu/admin/export'
       
       def self.reset
         Post.delete_all
       end
       
-      def self.dump(id)
-        ht = RestClient.post API_URL, key: UMBC_CONFIG[:myumbc3][:importer][:passkey], ids: id
+      def self.news_dump(id)
+        ht = RestClient.post API_BASE + '/news.json', key: UMBC_CONFIG[:myumbc3][:importer][:passkey], ids: id
         js = JSON.parse(ht.to_str, symbolize_names: true).first
         out = JSON.pretty_generate(js)
         
@@ -31,308 +31,114 @@ module Myumbc3
         end
         @entity_cache[my3_id]
       end
-    
+
       def self.import(output_file)
         self.reset
-        
+        self.import_content(:news, output_file)
+        self.import_content(:discussions, output_file)
+        self.import_content(:media, output_file)
+        self.import_content(:spotlights, output_file)
+        #self.import_content(:events, output_file)
+      end
+    
+    
+      def self.import_content(content_type, output_file)
         page_number = 1
-        page_size = 100
+        page_size = 1000
         total_import_count = 0
-          
+        
         begin
-          Rails.logger.info "Batch #{page_number}: Requesting #{page_size} news from my3..."
-          
-          ht = RestClient.post API_URL, key: UMBC_CONFIG[:myumbc3][:importer][:passkey], page: page_number, page_size: page_size
-          news_data = JSON.parse(ht.to_str, symbolize_names: true)
-          
-          Rails.logger.info "Batch #{page_number}: Parsing #{news_data.length} returned items..."
-      
           batch_import_count = 0
-
-          news_data.each do |old_news|
-            next if old_news[:status] == "draft"
+          
+          Rails.logger.info "Batch #{page_number}: Requesting #{page_size} content of type '#{content_type}' from my3..."
+          
+          # Retrieve the JSON fom myUMBC
+          ht = RestClient.post (API_BASE + "/#{content_type}.json"), key: UMBC_CONFIG[:myumbc3][:importer][:passkey], page: page_number, page_size: page_size
+          content_data = JSON.parse(ht.to_str, symbolize_names: true)
+          
+          Rails.logger.info "Batch #{page_number}: Parsing #{content_data.length} retreieved items..."
+          
+          content_data.each do |old_content|
+            # Ignore things that aren't posted, unless they're comments
+            next if (old_content[:status] != 'posted') && (content_type != :comments)
+            
+            # Ignore if already imported
+            next if Node.where(slugs: "my3-#{content_type}-#{old_content[:id]}").first
             
             new_post = Post.new
             
-            # Legacy Slug
-            new_post.slugs.add("my3-news-#{old_news[:id]}")
-            
-            begin
-              # Owner
-              if old_news[:group_id]
-                owner = entity_cache("my3-group-#{old_news[:group_id]}")
-              elsif old_news[:public]
-                owner = Group.get("my3-topic-#{old_news[:topics].first[:token]}")
-              else
-                raise "Invalid ownership"
-              end
-            rescue
-              raise "Error on news post #{old_news[:id]} - #{old_news[:topics]}"
+            # Get the owning group, or pick the topic if it was public
+            if old_content[:group_id]
+              owner = entity_cache("my3-group-#{old_content[:group_id]}")
+            else
+              owner = Group.get("my3-topic-#{old_content[:topics].first[:token]}")
             end
-            
+
             # Basics
-            new_post.title = old_news[:title]
-            new_post.tagline = old_news[:tagline]
-            new_post.body = old_news[:body]
+            new_post.title = old_content[:title]
+            new_post.tagline = old_content[:tagline]
+            new_post.body = old_content[:body]
             new_post.owner = owner
-            new_post.author = entity_cache("my3-user-#{old_news[:created_by_id]}")
+            new_post.author = entity_cache("my3-user-#{old_content[:created_by_id]}")
+            new_post.slugs.add("my3-#{content_type}-#{old_content[:id]}")
             
+            if old_content[:thumbnail].present? && old_content[:thumbnail][:urls].present? && old_content[:thumbnail][:urls][:xxxlarge].present?
+              new_post.cover_url = "http://my.umbc.edu" + old_content[:thumbnail][:urls][:xxxlarge].to_s
+            end
+          
             # Access
             if new_post.owner.access == :private
               new_post.access = :private
-            elsif old_news[:group_tool][:read_access] == 'member'
+            elsif old_content[:group_tool][:read_access] == 'member'
               new_post.access = :private
             else
               new_post.access = :public
             end
             
             # Tags
-            old_tags = old_news[:tags].map { |t| t[:token] }
-            old_topics = old_news[:topics].map { |t| t[:name] }
-            
-            new_post.tags = [old_tags].flatten + [old_topics].flatten
+            old_tags = old_content[:tags].map { |t| t[:token] }
+            old_topics = old_content[:topics].map { |t| t[:name] }
+            new_post.tags = [old_tags].flatten + [old_topics].flatten + ["my3-import-#{content_type}"]
             
             # Postings
             p = new_post.postings.build
             p.target = new_post.owner
             p.by = new_post.author
-            p.at = old_news[:posted_at]
-            p.category_id = p.target.posts.categories.where(slugs: 'my3-news').first.try(:id)
+            p.at = old_content[:posted_at]
+
+            begin
+              p.container_id = p.target.categories.find_by_slug("my3-#{content_type}").try(:id)
+            rescue
+              puts "ERROR: #{p.target.slug} does not have 'my3-#{content_type}' to hold #{old_content[:id]} - #{new_post.title}"
+            end
             
             # Cross post into the categories of the my3 legacy group
-            if old_news[:public] && (new_post.access == :public)
-              old_news[:topics].each do |topic|
+            if old_content[:public] && (new_post.access == :public)
+              old_content[:topics].each do |topic|
                 xowner = Group.get("my3-topic-#{topic[:token]}")
                 if xowner != new_post.owner
                   p = new_post.postings.build
                   p.target = xowner
                   p.by = new_post.author
-                  p.at = old_news[:posted_at]
-                  p.category_id = p.target.posts.categories.where(slugs: 'my3-news').first.try(:id)
+                  p.at = old_content[:posted_at]
+                  p.container_id = p.target.categories.find_by_slug("my3-#{content_type}").try(:id)
                 end
               end
             end
             
-            
-            
-            # new_group = Group.new
-#             
-#             # Status
-#             if old_group[:kind] == 'retired'
-#               new_group.status = :retired
-#             elsif old_group[:status] == 'active'
-#               new_group.status = :active
-#             elsif (old_group[:status] == 'inactive') && (old_group[:token].match(/denied/))
-#               new_group.status = :denied
-#             elsif old_group[:status] == 'pending'
-#               new_group.status = :pending
-#             else
-#               raise "Unknown status, for #{old_group[:token]}:#{old_group[:id]} -- #{old_group[:status]}"
-#             end
-#             
-#             # Slug
-#             new_group.slugs.add "my3-group-#{old_group[:id]}"
-#             if old_group[:kind] == 'retired'
-#               # no slug
-#             elsif new_group.status == :active
-#               new_group.slug = old_group[:token]
-#             end
-#             
-#             new_group.name = old_group[:name]
-#             new_group.tagline = Utils::Text.to_plain_text(old_group[:tagline])
-#             new_group.description = Utils::Text.to_plain_text(old_group[:description])
-#             new_group.analytics_id = old_group[:google_analytics_id]
-#             
-#             
-#             
-#             # Creation
-#             new_group.created_at = old_group[:created_at]
-#             new_group.created_by = Entity.get("my3-user-#{old_group[:created_by_id]}")
-#             
-#             # Kind
-#             new_group.kind = (old_group[:kind] == 'retired') ? :legacy : old_group[:kind].to_sym
-#             # TODO Map these to new kinds?
-#             
-#             # Access
-#             public = old_group[:public] == true
-#             open = old_group[:membership] == 'open'
-# 
-#             if public
-#               new_group.access = :public #new_group.visbility.add('public')
-#             end
-#             
-#             #####
-#             # Tools -> Categories
-#             
-#             any_anyone_tools = false
-#             any_member_tools = false
-#             
-#             old_group[:group_tools].sort_by { |t| t[:position] }.each do |tool|
-#               
-#               if tool[:write_access] == 'admin'
-#                 posting = :admins
-#               elsif !public
-#                 posting = :members
-#                 any_member_tools = true
-#               elsif open && (tool[:write_access] == 'member')
-#                 posting = :anyone
-#                 any_anyone_tools = true
-#               elsif public && !open
-#                 posting = :members
-#                 any_member_tools = true
-#               else
-#                 puts old_group[:token]
-#                 raise "Unknown posting scenario"
-#               end
-#               
-#               # if public && (tool[:read_access] != 'anyone')
-#               #   raise "Take a look at group #{old_group[:token]}:#{old_group[:id]} for tools"
-#               # end
-#               
-#               case tool[:kind]
-#               when 'home'
-#                 # Ignore
-#               when 'news'
-#                 if tool[:enabled] == true
-#                   c = new_group.posts.categories.add('News', format: :list, posting: posting)
-#                   c.slugs.add 'my3-news'
-#                 end
-#                 new_group.posts.posting = (posting == :admins) ? posting : :members
-#               when 'events'
-#                 new_group.events.slugs.add 'my3-events'
-#                 new_group.events.posting = posting
-#               when 'discussions'
-#                 if tool[:enabled] == true
-#                   c = new_group.posts.categories.add('Discussions', format: :forum, posting: posting)
-#                   c.slugs.add 'my3-discussions'
-#                 end
-#               when 'media'
-#                 if tool[:enabled] == true
-#                   c = new_group.posts.categories.add('Media', format: :gallery, posting: posting)
-#                   c.slugs.add 'my3-media'
-#                 end
-#               when 'documents'
-#                 new_group.library.posting = (posting == :admins) ? posting : :members
-#                 new_group.library.slugs.add 'my3-documents'
-#               when 'members'
-#                 if tool[:read_access] == 'anyone'
-#                   new_group.show_members = :anyone
-#                 else
-#                   new_group.show_members = :members
-#                 end
-#               when 'settings'
-#                 # Ignore
-#               when 'spotlights'
-#                 c = new_group.posts.categories.add('Spotlights Archive', format: :list, posting: posting)
-#                 c.slugs.add 'my3-spotlights'
-#               when 'statuses'
-#                 # Ignore
-#               end
-#             end
-#             
-#             # Documents
-#             old_group[:group_document_folders].each do |f|
-#               f = new_group.library.folders.add(f[:title])
-#               f.slugs.add "my3-documents-#{f[:id]}"
-#             end
-#             
-#             
-#             # Group Memberships
-#             member_slugs = old_group[:group_members].map{ |gm| "my3-user-#{gm[:user_id]}" }
-#             member_entities = Entity.in(slugs: member_slugs)
-#             
-#             es = {}
-#             member_entities.each do |me|
-#               me.slugs.each do |s|
-#                 es[s] = me
-#               end
-#             end
-#             
-#             #puts "Merging..."
-#             @entity_cache ||= {}          
-#             @entity_cache = @entity_cache.merge(es)
-#             #puts @entity_cache
-#             #return
-#             
-#             old_group[:group_members].each do |gm|
-#               e = self.entity_cache("my3-user-#{gm[:user_id]}")
-#               #e = es["my3-user-#{gm[:user_id]}"]
-#               
-#               if e.present?
-#                 nots = (gm[:watching] ? 'important' : 'none')
-#               
-#                 if gm[:status] == 'invited'
-#                   
-#                   #new_gm = GroupInvitation.new
-#                   #new_gm.entity_id = e.id
-#                   #new_gm.created_at = gm[:invited_at]
-#                   creator = self.entity_cache("my3-user-#{gm[:invited_by_id]}")
-#                   raise "Could not find creator: #{gm[:invited_by_id]}" if creator.nil?
-#                   #new_gm.created_by_id = creator.id
-#                   
-#                   new_group.invitations.add(e, { created_at: gm[:invited_at], created_by: creator })
-#                 else
-#                   case gm[:role]
-#                   when 'owner', 'admin', 'member'
-#                     #is_admin = ((gm[:role] == 'owner') || (gm[:role] == 'admin'))
-#                     #new_gm = GroupMembership.new
-#                     #new_gm.entity_id = e.id
-#                     #new_gm.notifications = nots
-#                     #new_gm.admin = ((gm[:role] == 'owner') || (gm[:role] == 'admin'))
-#                     #new_gm.locked = gm[:auto]
-#                     #new_gm.title = gm[:custom_title]
-#                     #new_gm.email = gm[:custom_email]
-#                     #new_gm.created_at = gm[:joined_at]
-#                     creator = self.entity_cache("my3-user-#{gm[:joined_by_id]}")
-#                     raise "Could not find creator: #{gm[:joined_by_id]}" if creator.nil?
-#                     #new_gm.created_by_id = creator.id
-#                     
-#                     if (gm[:role] == 'member') && (gm[:auto] == false) && (gm[:officer] == false) && open && (any_anyone_tools || !any_member_tools) && (gm[:invited_by_id] == gm[:user_id])
-#                       new_group.followerships.add(e, { notifications: nots, created_at: gm[:joined_at], created_by: e })
-#                     else
-#                       new_group.memberships.add(e, { created_at: gm[:joined_at], notifications: nots, admin: ((gm[:role] == 'owner') || (gm[:role] == 'admin')), locked: (gm[:auto] == true), officer: (gm[:officer] == true), title: gm[:title], email: gm[:email], created_by: creator})
-#                     end
-#                     #if ((gm[:role] == 'owner') || (gm[:role] == 'admin')) || !any_open_tools
-#                       
-#                       #else
-#                       #new_group.followerships.add(e, { notifications: nots, created_at: gm[:joined_at], created_by: e })
-#                       #end
-#                     
-#                   when 'follower'
-#                     #new_gm = GroupFollowership.new
-#                     #new_gm.entity_id = e.id
-#                     #new_gm.notifications = nots
-#                     #new_gm.created_at = gm[:joined_at]
-#                     #new_gm.created_by_id = e.id
-#                     new_group.followerships.add(e, { notifications: nots, created_at: gm[:joined_at], created_by: e })
-#                   end
-#                 end
-#                 
-#                 #if new_gm && !new_gm.valid?
-#                 #  raise "#{new_gm.errors.messages}"
-#                 #  raise "BAD: Group: #{old_group[:id]}, Entity: #{gm[:user_id]} / #{gm[:role]}"
-#                 #end
-#                 
-#                 #new_group.group_relationships << new_gm
-#               end
-#             end
-            
-            #ap old_group
-            #puts "#{new_group.name}"
             new_post.save!
-                        
             batch_import_count += 1
             total_import_count += 1
-            #putc '.'
-          end 
-
-          Rails.logger.info "Batch #{page_number}: Added #{batch_import_count} groups... TOTAL: #{total_import_count}"
+            putc '.'
+          end
+          
+          Rails.logger.info "Batch #{page_number}: Added #{batch_import_count} posts... TOTAL: #{total_import_count}"
           page_number += 1
           
-        end while news_data.present?
+        end while content_data.present?
         
         Rails.logger.info "IMPORTED: #{total_import_count} posts."
-      end  
+      end
     end
   end
 end

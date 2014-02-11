@@ -1,0 +1,30 @@
+- content_for :html_head
+  scss:
+    body {}
+    
+= render 'group_home/group_menu'  
+= render 'group_home/group_header'
+
+#content-details
+      
+  - if @post.cover_url != '[]'
+    .cover-image= image_tag "http://my.umbc.edu#{@post.cover_url}"
+  section
+    .credits
+      .pic.user= group_avatar(@post.author)
+      .name = @post.author.name
+      .pic.group= group_avatar(@post.owner)
+      .name = @post.owner.name
+    .content
+      
+      - cat = @group.categories.find(@post.postings.where(target_id: @group.id).first.container_id)
+      .category= link_to cat.name, group_post_category_path(@group, cat)
+      h1= @post.title
+      h2= @post.tagline
+      .body= @post.body.try(:html_safe)
+      .tags
+        strong' Tags
+        - @post.tags.each do |t|
+          span.tag= t
+  
+pre= JSON.pretty_generate(JSON[@post.as_document.to_json])

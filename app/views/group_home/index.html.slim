@@ -1,65 +1,11 @@
-- page_size = 1000
-.paging
-  - page_count = (@group_count / page_size) + ((@group_count & page_size) > 0 ? 1 : 0)
-  - (1..page_count).each do |i|
-    - if @page == i
-      span.page_link.active= i
-    - else
-      span.page_link= link_to i, page: i
+/= render 'group_home/group_header'
+/= render 'group_home/group_menu'
 
-h1 All Groups (#{@group_count})
-
-table border=0 cellspacing=0 cellpadding=4 width='100%'
-  - cache(cache_key_for_groups(page: @page)) do
-    tr
-      th id
-      th
-      th name
-      th slug
-      th
-      th
-      th
-      th status
-      th kind
-      /th style="text-align: center;" folders
-      th style="text-align: center;" admins
-      th style="text-align: center;" members
-      th style="text-align: center;" followers
-      /th updated
-    - @groups.order_by(sorted_name: 1).limit(page_size).offset((@page - 1) * page_size).each do |g|
-      - cache(g) do
-        tr class="status-#{g.status} kind-#{g.kind}"
-          td
-            tt= g.id
-          td
-            - if g.access == :private
-              | 🔒
-            - else
-              | 🌎
-          td= link_to g.name, "/groups/#{g.slug}"
-          td= link_to g.slug, "/groups/#{g.slug}"
-          td
-            - if (g.status == :active) && (g.posts.categories.all? { |c| c.posting == :admins })
-              |💀
-          td
-            - if g.memberships(admin: true).count == 0
-              |❌
-          td
-            - if g.posts.categories.any? { |c| c.posting == :anyone }
-              |✳️
-          td= g.status
-          td= g.kind
-          //td style="text-align: center;" = g.library.folders.count
-          td style="text-align: center;"= g.memberships(admin: true).count
-          td style="text-align: center;"= g.memberships(admin: false).count
-            
-          td style="text-align: center;" = g.followerships.count
-          /td= g.updated_at.to_s(:short)
-
-.paging
-  - page_count = (@group_count / page_size) + ((@group_count & page_size) > 0 ? 1 : 0)
-  - (1..page_count).each do |i|
-    - if @page == i
-      span.page_link.active= i
-    - else
-      span.page_link= link_to i, page: i
+#group-details.site-content
+  - if @group.header_url
+    .cover-image
+      = image_tag ("http://my.umbc.edu" + @group.header_url)
+  h1 About This Group
+  section style="white-space: pre-line;"= @group.description.try(:html_safe)
+  
+pre= JSON.pretty_generate(JSON[@group.as_document.to_json])

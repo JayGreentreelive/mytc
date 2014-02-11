@@ -1,0 +1,64 @@
+- content_for :html_head
+  scss:
+    #content-details {
+      float: left; width: 69%; margin-top: 0;
+      .details {
+        font-size: .8em; color: #999;
+        .id { display: inline-block; }
+        .posted_at { display: inline-block; }
+      }
+      .summary { font-size: .8em; }
+      ul { margin: 0; padding: 0; }
+      li + li { margin-top: 1.5em; }
+      li { overflow: hidden; list-style: none; padding: 0; margin: 0; }
+      li .list-avatar .avatar { vertical-align: middle; display: inline-block; color: #eee; border-radius: 1px; height: 48px; width: 48px; font-size: .9em; font-family: 'Roboto Condensed'; background-size: cover; float: left; margin-right: 20px; }
+      li .list-avatar.user .avatar { border-radius: 24px; line-height: 48px; text-align: center; font-size: 1.7em; font-weight: 200; }
+      .list-details { overflow: hidden; }
+      li .details .avatar { vertical-align: middle; display: inline-block; color: #eee; border-radius: 1px; margin: 0 .2em; height: 16px; width: 16px; font-size: .9em; font-family: 'Roboto Condensed'; background-size: cover;}
+      .cat { font-weight: 400; display: inline-block;  background-size: cover; }
+      .posted-at { display: inline-block; }
+      .repost { display: inline-block; font-size: .8em; color: #999; }
+      .title { font-weight: 400; }
+    }
+  
+= render 'group_home/group_header'
+= render 'group_home/group_menu'
+
+#content-details.site-content
+  
+  - if @category_id
+    - post_base = @group.categories.find(@category_id)
+  - else
+    - post_base = @group
+
+  - if @category_id
+    h1= @group.categories.find(@category_id).name
+  - else
+    h1 All Posts
+  ul
+    - post_base.posts.page(1, 30).includes(:owner).each do |p|
+      - cat = @group.categories.find(p.postings.where(target_id: @group.id).first.container_id)
+      - repost = p.owner != @group
+      li
+        - if repost
+          .list-avatar.group
+            = group_avatar(p.owner)
+        - else
+          .list-avatar.user
+            = group_avatar(p.author)
+        .list-details
+          .title
+            - if repost
+              ' ♺ 
+              /= link_to p.title, group_post_path(p.owner, p, list: "#{@group.id}-#{@category_id || 'all'}")
+              /- else
+            = link_to p.title, group_post_path(@group, p, list: "#{@group.id}-#{@category_id || 'all'}")
+          .summary= Utils::Text.to_plain_text(p.body)[0..250]
+          .details
+            - if !@category_id
+              .cat' #{cat.name} &middot; 
+            .posted_at= p.postings.where(target_id: @group.id).first.at.to_s(:long)
+            /- if repost
+              .repost &middot; ♺ Reposted from #{group_avatar(p.owner)} #{p.owner.name}
+          
+          

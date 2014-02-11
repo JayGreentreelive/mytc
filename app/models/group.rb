@@ -1,9 +1,9 @@
 class Group < Entity
   include Mongoid::Timestamps
   
-  POSTS_CATEGORY_ID = 'posts'
-  EVENTS_CATEGORY_ID = 'events'
-  LIBRARY_CATEGORY_ID = 'library'
+  #POSTS_CATEGORY_ID = 'posts'
+  #EVENTS_CATEGORY_ID = 'events'
+  #LIBRARY_CATEGORY_ID = 'library'
   
   STATUS_PENDING = :pending
   STATUS_DENIED = :denied
@@ -34,6 +34,9 @@ class Group < Entity
   field :analytics_id, type: String
   field :show_members, type: Symbol, default: SHOW_MEMBERS_ANYONE
   
+  field :avatar_url, type: String
+  field :header_url, type: String
+  
   field :sorted_name, type: String
   
   # Relations
@@ -57,6 +60,8 @@ class Group < Entity
   validates :show_members, inclusion: { in: [SHOW_MEMBERS_ANYONE, SHOW_MEMBERS_MEMBERS, SHOW_MEMBERS_ADMINS] }
   validate :_validate_show_members
   
+  validates :slugs, array: { exclusion: { in: %w(new search directory) } }  
+  
   # Callbacks
   after_initialize :_setup_new_group
   before_save :_set_sorted_name
@@ -66,7 +71,9 @@ class Group < Entity
   
   #####
   # Instance Methods
-  
+  def to_param
+    self.slug
+  end
   
   #############
   # MEMBERS / FOLLOWERS / INVITEES / WATCHERS
@@ -84,51 +91,52 @@ class Group < Entity
   
   embeds_many :group_relationships
   
-  def memberships(options = {})
-    GroupMembershipCollection.new(self, options)
+  def memberships
+    GroupMembershipCollection.new(self)
   end
 
-  def followerships(options = {})
-    GroupFollowershipCollection.new(self, options)
+  def followerships
+    GroupFollowershipCollection.new(self)
   end
   
-  def invitations(options = {})
-    GroupInvitationCollection.new(self, options)
+  def invitations
+    GroupInvitationCollection.new(self)
   end
   
-  def watcherships(options = {})
-    GroupWatchershipCollection.new(self, options)
+  def watcherships
+    GroupWatchershipCollection.new(self)
   end
-  
-  
+
   
   #############
   # CATEGORIES / EVENTS / LIBRARY
   #
-  field :post_category_order, type: Array, default: []
+  field :category_order, type: Array, default: []
   #validate :_validate_post_category_order
   #before_validation :_ensure_post_category_order
-  embeds_many :group_categories, cascade_callbacks: true
-  validates_associated :group_categories
+  embeds_many :group_containers, cascade_callbacks: true
+  validate :_validate_containers
+  validates_associated :group_containers
   
   def posts
-    self.group_categories.type(GroupPostCategory).find(POSTS_CATEGORY_ID)
+    @_post_list ||= PostList.new.group(self)
   end
   
-  def events
-    self.group_categories.type(GroupEventCategory).find(EVENTS_CATEGORY_ID)
+  def categories
+    GroupCategoryCollection.new(self)
   end
   
-  def library
-    self.group_categories.type(GroupLibraryCategory).find(LIBRARY_CATEGORY_ID)
-  end
+  #def events
+  #  GroupEventCollection.new(self)
+  #end
   
-  # def _ensure_post_category_order
-  #   unless self.post_category_order.all? { |a| self.posts.categories.ids.include?(a) }
-  #     self.post_category_order = self.posts.categories.ids
-  #   end
-  # end
+  #def calendars
+  #  GroupCalendarCollection.new(self)
+  #end
   
+  #def library
+  #  self.group_containers.type(GroupFolder).find(LIBRARY_CONTAINER_ID)
+  #end
 
   private
   
@@ -137,15 +145,27 @@ class Group < Entity
   end
   
   def _set_sorted_name
-    self.sorted_name = ActiveSupport::Inflector.parameterize("#{ActiveSupport::Inflector.transliterate(self.name).downcase}", '').gsub(/[^a-z]/i, '').concat("-#{self.id}")
+    self.sorted_name = ActiveSupport::Inflector.parameterize("#{ActiveSupport::Inflector.transliterate(self.name).downcase}", '').gsub(/[^a-z0-9]/i, '').concat("-#{self.id}")
   end
   
   def _setup_new_group
     if self.new_record?
       # create default categories
-      posts = self.group_categories.build({id: POSTS_CATEGORY_ID, name: 'Posts'}, GroupPostCategory)
-      events = self.group_categories.build({id: EVENTS_CATEGORY_ID, name: 'Events'}, GroupEventCategory)
-      library = self.group_categories.build({id: LIBRARY_CATEGORY_ID, name: 'Library'}, GroupLibraryCategory)
+      default_category = self.categories.add('Posts')
+      #events = self.group_categories.build({id: EVENTS_CATEGORY_ID, name: 'Events'}, GroupEventCategory)
+      #library = self.group_categories.build({id: LIBRARY_CONTAINER_ID, name: 'Library'}, GroupLibraryCategory)
     end
+  end
+  
+  def _validate_containers
+    if self.categories.length < 1
+      errors.add_to_base("Must have at least one category #{self.slugs}")
+    end
+    #if self.calendars.length < 1
+    #  errors.add(:categories, 'Must have at least one category')
+    #end
+    #if !self.library
+    #  errors.add(:library, 'Must have a root library folder')
+    #end
   end
 end

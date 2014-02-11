@@ -6,7 +6,6 @@ class PersonFavorite
   field :url, type: String
   field :used_at, type: DateTime
   field :uses, type: Integer, default: 0
-  #field :position, type: Integer
   
   normalize_attribute :name, with: [:blank, :squish]
   normalize_attribute :url, with: [:blank, :squish]

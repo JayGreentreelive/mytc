@@ -2,7 +2,7 @@ module Myumbc3
   module Importer
     module GroupImporter
       
-      API_URL = 'https://my.umbc.edu/admin/export/groups.json'
+      API_URL = 'https://dev.my.umbc.edu/admin/export/groups.json'
       
       def self.reset
         Group.delete_all
@@ -22,8 +22,12 @@ module Myumbc3
     
       def self.entity_cache(my3_id)
         if !@entity_cache[my3_id]
-          puts "Loading #{my3_id}"
-          @entity_cache[my3_id] = Entity.find_by_slug(my3_id)
+          #puts "Loading #{my3_id}"
+          begin
+            @entity_cache[my3_id] = Entity.find_by_slug(my3_id)
+          rescue
+            nil
+          end
         end
         @entity_cache[my3_id]
       end
@@ -60,30 +64,34 @@ module Myumbc3
           new_group = Group.new
           new_group.status = :active
           new_group.slug = "my3-topic-#{topic}"
-          new_group.name = topics[topic]
+          new_group.name = "#{topics[topic]} (Topic Archive)"
           new_group.description = "An archive of posts made in past version of myUMBC"
           new_group.created_at = Time.zone.now
           new_group.kind = :legacy
           new_group.access = :public
           
-          c = new_group.posts.categories.add('News', format: :list, posting: :members)
+          
+          
+          c = new_group.categories.add('News', format: :list, posting: :members)
           c.slugs.add 'my3-news'
           
-          c = new_group.posts.categories.add('Discussions', format: :forum, posting: :members)
+          c = new_group.categories.add('Discussions', format: :forum, posting: :members)
           c.slugs.add 'my3-discussions'
           
-          c = new_group.posts.categories.add('Media', format: :gallery, posting: :members)
+          c = new_group.categories.add('Media', format: :gallery, posting: :members)
           c.slugs.add 'my3-media'
           
-          c = new_group.posts.categories.add('Spotlights Archive', format: :list, posting: :members)
+          c = new_group.categories.add('Spotlights Archive', format: :list, posting: :members)
           c.slugs.add 'my3-spotlights'
           
-          new_group.events.posting = :members
-          new_group.events.slugs.add 'my3-events'
+          new_group.categories.remove(new_group.categories.first)
           
-          new_group.library.posting = :members
+          #new_group.events.posting = :members
+          #new_group.events.slugs.add 'my3-events'
           
-          new_group.show_members = :members
+          #new_group.library.posting = :members
+          
+          new_group.show_members = :admins
           
           new_group.save!
           Rails.logger.info "Topic: #{new_group.slug} added..." 
@@ -91,12 +99,16 @@ module Myumbc3
       end
     
       def self.import(output_file)
-        self.reset
-        self.setup_topic_groups
+        start = Group.count
         
-        page_number = 1
-        page_size = 10
+        page_size = 100
+        page_number = (start / page_size)
+        puts "#{start} existing... starting on page number #{page_number}"
         total_import_count = 0
+
+        if start == 0
+          self.setup_topic_groups
+        end
           
         begin
           Rails.logger.info "Batch #{page_number}: Requesting #{page_size} groups from my3..."
@@ -109,6 +121,7 @@ module Myumbc3
           batch_import_count = 0
 
           group_data.each do |old_group|
+            next if Group.where(slugs: "my3-group-#{old_group[:id]}").first
             new_group = Group.new
             
             # Status
@@ -134,8 +147,16 @@ module Myumbc3
             
             new_group.name = old_group[:name]
             new_group.tagline = Utils::Text.to_plain_text(old_group[:tagline])
-            new_group.description = Utils::Text.to_plain_text(old_group[:description])
+            new_group.description = old_group[:description]
             new_group.analytics_id = old_group[:google_analytics_id]
+            
+            if old_group[:avatar].present? && old_group[:avatar][:urls].present? && old_group[:avatar][:urls][:xxxlarge].present?
+              new_group.avatar_url = "http://my.umbc.edu" + old_group[:avatar][:urls][:xxxlarge].to_s
+            end
+            
+            if old_group[:header].present? && old_group[:header][:urls].present? && old_group[:header][:urls][:original].present?
+              new_group.header_url = "http://my.umbc.edu" + old_group[:header][:urls][:original].to_s
+            end
             
             
             
@@ -157,6 +178,8 @@ module Myumbc3
             
             #####
             # Tools -> Categories
+            
+            default_cat = new_group.categories.first
             
             any_anyone_tools = false
             any_member_tools = false
@@ -183,31 +206,48 @@ module Myumbc3
               #   raise "Take a look at group #{old_group[:token]}:#{old_group[:id]} for tools"
               # end
               
+              # Remove the initial 
+              
               case tool[:kind]
               when 'home'
                 # Ignore
               when 'news'
-                if tool[:enabled] == true
-                  c = new_group.posts.categories.add('News', format: :list, posting: posting)
+                #next if tool[:count] == 0
+                if (tool[:count] > 0)
+                  c = new_group.categories.add('News', format: :list, posting: posting)
                   c.slugs.add 'my3-news'
+                  if default_cat
+                    new_group.categories.remove(default_cat)
+                    default_cat = nil
+                  end
                 end
-                new_group.posts.posting = (posting == :admins) ? posting : :members
+                #new_group..posting = (posting == :admins) ? posting : :members
               when 'events'
-                new_group.events.slugs.add 'my3-events'
-                new_group.events.posting = posting
+                #new_group.events.slugs.add 'my3-events'
+                #new_group.events.posting = posting
               when 'discussions'
-                if tool[:enabled] == true
-                  c = new_group.posts.categories.add('Discussions', format: :forum, posting: posting)
+                #next if tool[:count] == 0
+                if (tool[:count] > 0)
+                  c = new_group.categories.add('Discussions', format: :forum, posting: posting)
                   c.slugs.add 'my3-discussions'
+                  if default_cat
+                    new_group.categories.remove(default_cat)
+                    default_cat = nil
+                  end
                 end
               when 'media'
-                if tool[:enabled] == true
-                  c = new_group.posts.categories.add('Media', format: :gallery, posting: posting)
+                #next if tool[:count] == 0
+                if (tool[:count] > 0)
+                  c = new_group.categories.add('Media', format: :gallery, posting: posting)                  
                   c.slugs.add 'my3-media'
+                  if default_cat
+                    new_group.categories.remove(default_cat)
+                    default_cat = nil
+                  end
                 end
               when 'documents'
-                new_group.library.posting = (posting == :admins) ? posting : :members
-                new_group.library.slugs.add 'my3-documents'
+                #new_group.library.posting = (posting == :admins) ? posting : :members
+                #new_group.library.slugs.add 'my3-documents'
               when 'members'
                 if tool[:read_access] == 'anyone'
                   new_group.show_members = :anyone
@@ -217,7 +257,8 @@ module Myumbc3
               when 'settings'
                 # Ignore
               when 'spotlights'
-                c = new_group.posts.categories.add('Spotlights Archive', format: :list, posting: posting)
+                next if tool[:count] == 0
+                c = new_group.categories.add('Spotlight Archive', format: :list, posting: posting)
                 c.slugs.add 'my3-spotlights'
               when 'statuses'
                 # Ignore
@@ -226,9 +267,10 @@ module Myumbc3
             
             # Documents
             old_group[:group_document_folders].each do |f|
-              f = new_group.library.folders.add(f[:title])
-              f.slugs.add "my3-documents-#{f[:id]}"
+              #f = new_group.library.folders.add(f[:title])
+              #f.slugs.add "my3-documents-#{f[:id]}"
             end
+            
             
             
             # Group Memberships

@@ -11,8 +11,7 @@ module Sluggable
     validates :display_slug, allow_nil: true, format: { with: Utils::Slugger::SLUG_REGEX }
     validate :_validate_display_slug_in_slugs
 
-    before_save :_ensure_id_in_slugs
-    
+    before_save :_ensure_id_in_slugs    
   end
 
   # Class Methods
@@ -22,14 +21,13 @@ module Sluggable
     end
 
     def find_by_slug(sl)
-      sl = Utils::Slugger.slugify(sl)
-      self.where(slugs: sl).first
+      self.find_by(slugs: Utils::Slugger.slugify(sl))
     end
   end
 
   # Instance Methods  
   def slug
-    self.display_slug || self.slugs.first
+    self.display_slug || self.id
   end
 
   def slug=(sl)

@@ -21,3 +21,64 @@
 
 en:
   hello: "Hello world"
+
+# Greek transliterations for greek orgs
+# http://www.pathguy.com/alphabet.htm
+
+  i18n:
+    transliterate:
+      rule:
+        A: 'A'
+        α: 'a'
+        B: 'B'
+        β: 'b'
+        Γ: 'G'
+        γ: 'g'
+        Δ: 'D'
+        δ: 'd'
+        Ε: 'E'
+        ε: 'e'
+        Ζ: 'Z'
+        ζ: 'z'
+        Η: 'E'
+        η: 'e'
+        Θ: 'T'
+        θ: 't'
+        Ι: 'I'
+        ι: 'i'
+        Κ: 'K'
+        κ: 'k'
+        Λ: 'L'
+        λ: 'l'
+        Μ: 'M'
+        μ: 'm'
+        Ν: 'N'
+        ν: 'n'
+        Ξ: 'X'
+        ξ: 'x'
+        Ο: 'O'
+        ο: 'o'
+        Π: 'P'
+        π: 'p'
+        Ρ: 'R'
+        ρ: 'r'
+        Σ: 'S'
+        σ: 's'
+        ς: 's'
+        Τ: 'T'
+        τ: 't'
+        Υ: 'Y'
+        υ: 'u'
+        Φ: 'P'
+        φ: 'p'
+        Χ: 'X'
+        χ: 'x'
+        Ψ: 'P'
+        ψ: 'p'
+        Ω: 'O'
+        ω: 'o'
+        
+        
+        
+        
+      

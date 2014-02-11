@@ -1,0 +1,11 @@
+- content_for :html_head do
+  scss:
+    #start.card { margin: 1.2em; }
+
+
+#start.card
+  h1 Welcome to myUMBC 4
+  p This is the <b>#{Rails.env}</b> instance.
+  h3 Things to Do
+  ul
+    li= link_to 'Groups', groups_path

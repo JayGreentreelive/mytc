@@ -1,0 +1,79 @@
+#site-nav class=(@group.present? ? 'group' : 'nogroup') class=(@group.present? ? 'collapsed' : '')
+  ul
+    li.me
+      a href='#'
+        = entity_avatar(@user)
+        .label= @user.name
+    li.start
+      a href=root_path
+        .icon St
+        .label Start
+    li.guide
+      a href='#'
+        span.icon Gu
+        span.label Guide
+    li.events
+      a href='#'
+        span.icon Ev
+        span.label Events
+    li.groups
+      a href=groups_path
+        span.icon Gr
+        span.label Groups
+    li.community
+      a href=groups_path
+        span.icon Co
+        span.label Community
+
+- if @group
+  #group-nav
+    .group-summary
+      = entity_avatar(@user)
+      .name= @user.name
+      .kind= entity_desc(@user)
+    .group-follow
+      input type='submit' value='Follow'
+    .group-search
+      input type='text' placeholder='Search this group'
+    .group-navlist
+      ul
+        li.home: a
+          .icon
+          .label Home
+        li.all-posts: a href='?pl=all'
+          .icon
+          .label All Posts
+        li.category.list: a
+          .icon
+          .label List Category
+        li.category.blog: a
+          .icon
+          .label Blog Category
+        li.category.forum: a
+          .icon
+          .label Forum Category
+        li.category.gallery: a
+          .icon
+          .label Gallery Category
+        li.events: a
+          .icon
+          .label Events
+        li.library: a
+          .icon
+          .label Library
+        li.people: a
+          .icon
+          .label People
+        li.people: a
+          .icon
+          .label Settings
+        li.links-header Links
+        li.link: a
+          .icon
+          .label Website
+        li.link: a
+          .icon
+          .label Twitter
+        li.link: a
+          .icon
+          .label Facebook

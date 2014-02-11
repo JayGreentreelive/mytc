@@ -1,0 +1,16 @@
+- if @playlist
+  #site-playlist
+    .summary
+      .icon
+        = entity_avatar(@playlist)
+      .details
+        .primary
+          = @playlist.name
+        .secondary #{entity_desc(@playlist)}
+    
+    a.prev-item href='#'
+      .desc &laquo; Previous Item
+      .label Article Title Goes Here That's Really Long And Doesn't Fit!
+    a.next-item href='#'
+      .desc Next Item &raquo;
+      .label Article Title Goes Here

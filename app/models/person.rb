@@ -18,6 +18,8 @@ class Person < Entity
   field :last_login_at, type: DateTime
   field :last_sync_at, type: DateTime
   
+  field :avatar_url, type: String
+  
   # Relations
   embeds_many :favorites, class_name: 'PersonFavorite'
   embeds_one :settings, class_name: 'PersonSettings', autobuild: true

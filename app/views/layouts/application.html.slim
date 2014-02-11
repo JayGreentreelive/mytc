@@ -2,38 +2,14 @@ doctype html
 html
   head
     title myUMBC 4
-    /= stylesheet_link_tag 'application', media: 'all'
+    = stylesheet_link_tag 'application', media: 'all'
     /= javascript_include_tag 'application'
     /= csrf_meta_tags
-    /link href='http://fonts.googleapis.com/css?family=Roboto:300,400,600,700,300italic,400italic' rel='stylesheet'
-    /link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,400,300,700,600' rel='stylesheet' type='text/css'
-    /link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700,300italic,400italic|Source+Code+Pro:300,400' rel='stylesheet' type='text/css'
-    css:
-      body { font-family: '#{params[:font]}', 'Roboto', 'Source Sans Pro', 'Open Sans', 'Helvetica Neue'; font-weight: 300; width: 90%; margin: 3em auto;  }
-      tt, pre { font-family: 'Source Code Pro', 'Helvetica Neue', 'Open Sans'; font-weight: 300; font-size: .9em; }
-      pre { background-color: #eee; width: 100%; overflow: auto; padding: 8px; }
-      .paging { float: right; }
-      .page_link { margin-right: 12px; }
-      .page_link.active { font-weight: 600;  }
-      h1,h2,h3,h4,h5,h6 { font-family: 'Roboto Slab'; font-weight: 300; }
-      .group-name { margin: 0; padding: 0; }
-      .group-tagline, .tagline { margin: 0; padding: 0; color: #666; font-weight: normal; }
-      a { color: #07f; }
-      a:visited { color: #04c; }
-      td, th { white-space: nowrap; }
-      th { text-align: left; }
-      .error { color: #c00; }
-      ul.posts li + li { margin-top: 1em; }
-      ul.posts h3, ul.posts h4 { margin: 0; padding: 0; }
-      ul.posts .title { font-weight: 500; }
-      ul.posts .posted { font-size: .7em; color: #999; }
-      ul.posts .xpost { font-size: .7em; color: #999; }
-      ul.posts .tags { font-size: .7em; color: #999; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .post_title { margin: 0; padding: 0; }
-
-    scss:
-      tr.status-retired { td, a { color: #ccc; } }
-      tr.status-denied { td, a { color: #c99; } }
-      tr.status-pending { td, a { color: #0c0; } }
+    = content_for(:html_head)
   body
-    = yield
+    = render 'site_head'
+    #site-container
+      = render 'site_nav'
+      #site-content
+        = render 'site_playlist'
+        = yield
