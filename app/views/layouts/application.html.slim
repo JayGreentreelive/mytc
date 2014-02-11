@@ -1,6 +1,13 @@
 doctype html
-html
+html lang='en'
   head
+    meta charset='UTF-8'
+    link href='http://fonts.googleapis.com/css?family=Roboto:400,300italic,300,400italic|Roboto+Slab:400,300' rel='stylesheet' type='text/css'
+    
+    / Sets the viewport width to the width of the device, so media queries work
+    / NOTE: We're locking the max scale (which prevents zooming) to fix bugs 
+    / during orientation changes on devices.  Our styles should accomodate this though.
+    meta name='viewport' content='width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1'
     title myUMBC 4
     = stylesheet_link_tag 'application', media: 'all'
     /= javascript_include_tag 'application'

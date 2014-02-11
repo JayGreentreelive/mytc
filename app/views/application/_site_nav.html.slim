@@ -10,20 +10,45 @@
         .label Start
     li.guide
       a href='#'
-        span.icon Gu
-        span.label Guide
+        .icon Gu
+        .label Guide
     li.events
       a href='#'
-        span.icon Ev
-        span.label Events
+        .icon Ev
+        .label Events
     li.groups
       a href=groups_path
-        span.icon Gr
-        span.label Groups
+        .icon Gr
+        .label Groups
     li.community
       a href=groups_path
-        span.icon Co
-        span.label Community
+        .icon Co
+        .label Community
+    li.group-header Your Groups
+    li.group
+      a href=groups_path
+        .count 12
+        .icon in
+        .label Incoming
+    li.group
+      a href=groups_path
+        .count 99
+        .icon CS
+        .label Computer Science & Electrical Engineering
+    li.group
+      a href=groups_path
+        .icon DI
+        .label Division of Information Technology
+    li.group
+      a href=groups_path
+        .count 9+
+        .icon MF
+        .label myUMBC Fan Club
+    li.group
+      a href=groups_path
+        .count 1
+        .icon UR
+        .label Undergraduate Research
 
 - if @group
   #group-nav
@@ -31,6 +56,7 @@
       = entity_avatar(@user)
       .name= @user.name
       .kind= entity_desc(@user)
+      .kind style='font-size: .7em;'= @user.id
     .group-follow
       input type='submit' value='Follow'
     .group-search
@@ -41,7 +67,7 @@
           .icon
           .label Home
         li.all-posts: a href='?pl=all'
-          .icon
+          .icon.entypo.mail
           .label All Posts
         li.category.list: a
           .icon
@@ -54,7 +80,7 @@
           .label Forum Category
         li.category.gallery: a
           .icon
-          .label Gallery Category
+          .label Gallery Category That's Too Long
         li.events: a
           .icon
           .label Events

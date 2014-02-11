@@ -11,7 +11,7 @@ class GroupsController < ApplicationController
       @query = /^#{@letter}/i
     end
     
-    @groups = UmbcPerson.where(last_name: @query).where(:umbc_affiliations.in => ['staff', 'faculty']).where(:avatar_url.exists => true).order_by(sorted_name: 1)
+    @groups = UmbcPerson.where(last_name: @query).where(:umbc_affiliations.in => ['student', 'employee']).order_by(sorted_name: 1)
     
     @group = @user
   end

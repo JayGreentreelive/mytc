@@ -1,9 +1,9 @@
-module GroupsHelper
+module EntityHelper
   
   
   def entity_desc(ent)
     if ent.is_a? UmbcPerson
-      ent.umbc_title || ent.umbc_username || ent.umbc_campus_id
+      (ent.umbc_title || ent.umbc_username || ent.umbc_campus_id)
     elsif ent.is_a? Person
       ent.display_email
     elsif ent.is_a? Group

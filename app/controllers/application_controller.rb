@@ -5,7 +5,7 @@ class ApplicationController < ActionController::Base
   
   # Expire Everything, for development
   before_action do
-    #expires_now
+    expires_now
   end
   
   before_action :setup_active_user
@@ -17,8 +17,8 @@ class ApplicationController < ActionController::Base
     else
       @user = User.new
     end
-    
-    @user = UmbcPerson.where(umbc_affiliations: 'undergraduate-student').limit(1000).to_a.sample(1).first
+    ucount = UmbcPerson.where(umbc_affiliations: 'undergraduate-student').count
+    @user = UmbcPerson.where(umbc_affiliations: 'undergraduate-student').offset(SecureRandom.random_number(ucount)).first
     
   end
   

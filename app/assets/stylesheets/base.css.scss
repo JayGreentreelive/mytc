@@ -1,3 +1,4 @@
+
 * {
   box-sizing: border-box;
 }
@@ -30,7 +31,7 @@ a, a:visited {
 
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Roboto Slab';
-  font-weight: 300;
+  font-weight: 400;
   margin: 0 0 .5em 0;
   padding: 0;
 }
@@ -55,6 +56,27 @@ input[type=submit] {
   cursor: pointer;
   &:hover { background-color: #1191ff; }
   &:active { background-color: #0070ee; }
+}
+
+.avatar {
+  display: block;
+  height: 152px;
+  width: 152px;
+  background-size: cover;
+  
+  .initials {
+    //font-family: 'Roboto Condensed', 'Roboto';
+    line-height: 152px;
+    color: #FFF;
+    font-size: 92px;
+    letter-spacing: -.2ex;
+    //margin-left: -.2ex;
+    text-align: center;
+    display: block;
+    margin: 0 auto;
+  }
+  &.image { border: 1px solid rgba(153,153,153,.1); background-color: rgba(153,153,153,.1); }
+  &.person { border-radius: 76px; }
 }
 
 header#my-head {
@@ -141,12 +163,12 @@ header#my-head {
 }
 
 #site-nav {
-  &.mobile { display: none; }
   height: 100%;
   display: table-cell;
   background-color: rgb(35, 40, 42);
   color: #fff;
   width: 256px;
+  max-width: 256px;
   border-right: rgb(20, 22, 23);
   min-width: 256px;
   height: 100%;
@@ -155,13 +177,21 @@ header#my-head {
   vertical-align: top;
   
   ul { margin: 0; padding: 0; }
-  li { white-space: nowrap; list-style: none; padding: 0; margin: 0; }
-  a { color: #fff; display: block; padding: .8em .8em; width: 100%; text-overflow: ellipsis; overflow: hidden; line-height: 24px; }
+  li { position: relative; white-space: nowrap; list-style: none; padding: 0; margin: 0; }
+  a { color: #fff; display: block; padding: .8em .8em; width: 100%; overflow: hidden; line-height: 24px; }
   a:hover { background-color: rgba(255, 255, 255, .1); }
-  .icon { text-align: center; color: #ccc; display: inline-block; width: 24px; height: 24px; background-color: rgba(255, 255, 255, .5); border-radius: 4px; margin-right: 8px; vertical-align: top; }
-  .label { display: inline-block; }
+  .icon { text-align: center; color: #ccc; display: block; float: left; width: 24px; height: 24px; background-color: rgba(255, 255, 255, .5); border-radius: 3px; margin-right: 8px; vertical-align: top; }
+  .label { display: block; overflow: hidden; text-overflow: ellipsis; }
+  .count { float: right; display: block; padding: 0 .4em; height: 20px; min-width: 20px; line-height: 20px; margin-top: 2px; vertical-align: middle; background-color: #FFF; border-radius: 12px; color: #000; text-align: center; font-size: .85em; }
   .start .icon { background-color: #090; }
   .groups .icon { background-color: #900; }
+  
+  li.group-header {
+    text-transform: uppercase;
+    font-weight: 400;
+    font-size: .9em;
+    padding: 1.6em .8em .2em .8em;
+  }
   
   li.me {
     a {
@@ -177,7 +207,6 @@ header#my-head {
       height: 32px;
       width: 32px;
       text-align: center;
-      border-color: rgba(255, 255, 255, .5);
   
       .initials {
         line-height: 32px;
@@ -186,13 +215,13 @@ header#my-head {
         margin-left: 0;
       }
   
+      &.image { border: 1px solid rgba(204,204,204,.2); background-color: rgba(204,204,204,.2); }
+  
       &.person {
         border-radius: 16px;
       }
     }
   }
-  
-  
   
   &.group {
     width: 52px;
@@ -200,41 +229,20 @@ header#my-head {
     min-width: 52px;
     
     &.collapsed {
-      li { text-align: center; opacity: .5;}
-      .label { display: none; }
+      li { text-align: center; }
+      .icon { opacity: .5; }
+      .label { display: none;  }
+      li.group-header { visibility: hidden; }
+      .count { position: absolute; right: 6px; top: 6px; padding: 0 .3em; display: block; min-width: 14px; height: 14px; line-height: 12px; background-color: #FFF; border-radius: 8px; color: #000; text-align: center; font-weight: 400; font-size: .7em; }
     }
     &.collapsed:hover {
-      li { opacity: 1; }
+      li * { opacity: 1; }
     }
     //.label { display: none; }
   }
 }
 
-
-.avatar {
-  display: block;
-  height: 152px;
-  width: 152px;
-  background-size: cover;
-  
-  .initials {
-    //font-family: 'Roboto Condensed', 'Roboto';
-    line-height: 152px;
-    color: #FFF;
-    font-size: 92px;
-    letter-spacing: -.2ex;
-    //margin-left: -.2ex;
-    text-align: center;
-    display: block;
-    margin: 0 auto;
-  }
-  &.image { border: 1px solid rgba(153,153,153,.1); background-color: rgba(153,153,153,.1);}
-  &.person { border-radius: 76px; }
-}
-
-
 #group-nav {
-  &.mobile { display: none; }
   background-color: #fff;
   height: 100%;
   display: table-cell;
@@ -313,22 +321,24 @@ header#my-head {
       display: block;
       padding: .5em 1em;
       white-space: nowrap;
-      width: 100;
+      width: 100%;
       text-overflow: ellipsis;
+      overflow: hidden;
       cursor: pointer;
       
       .icon {
-        display: inline-block;
+        float: left;
         height: 20px;
         width: 20px;
         background-color: rgba(0,0,0,.2);
         border-radius: 2px;
-        vertical-align: top;
+        vertical-align: bottom;
         margin-right: .4em;
       }
       .label {
-        display: inline-block;
         line-height: 20px;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
       &:hover {
         background-color: #07f;
@@ -353,7 +363,11 @@ header#my-head {
 }
 
 #site-playlist {
+  // Attached
   //margin: 1.2em 1.2em -1.2em 1.2em;
+  //border: 1px solid #ddd;
+  //border-bottom: none;
+  
   color: #fff;
   background-color: rgb(90, 104, 111);
   
@@ -387,11 +401,8 @@ header#my-head {
       .primary { font-size: .8em; white-space: nowrap; text-overflow: ellipsis; width: 100%; overflow: hidden;}
       .secondary { font-size: 1.2em; line-height: 1.2em; white-space: nowrap; text-overflow: ellipsis; width: 100%; overflow: hidden; }
     }
-    
-    
   }
-  
-    
+      
   a.prev-item, a.next-item {
     display: table-cell;
     max-width: 250px;
@@ -422,7 +433,7 @@ header#my-head {
   padding: 2em;
   border: 1px solid rgb(200, 205, 208);
   background-color: #fff;
-  border-radius: 2px;
+  border-radius: 0px;
 }
 
 .dev-notes {
@@ -435,9 +446,9 @@ header#my-head {
   opacity: .7;
   margin: 0;
   padding: .75em 1em;
-  font-family: 'Source Sans Pro';
-  font-size: .9em; 
-  h1,h2,h3,h4,h5,h6 { font-family: 'Source Sans Pro'; margin: 0; padding: 0; }
+  font-family: 'Menlo';
+  font-size: .7em; 
+  h1,h2,h3,h4,h5,h6 { font-family: 'Menlo'; margin: 0; padding: .4em .2em .2em; font-size: 1.1em;}
   ul { margin: 0; padding: .5em 2em ; }
   width: 25%;
 }
