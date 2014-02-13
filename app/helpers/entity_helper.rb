@@ -33,7 +33,7 @@ module EntityHelper
       initials = ent.slug.upcase
       ent_type = ent.class.name.downcase.to_sym
     else
-      initials = ent.name.downcase.gsub(' and ', ' ').gsub(' for ', ' ').gsub(' of ', ' ').gsub(/[^a-z0-9 ]/i, ' ').split(' ')[0..3].map { |w| w[0] }.join('').upcase
+      initials = ent.name.split('(')[0].downcase.gsub(' and ', ' ').gsub(' for ', ' ').gsub(' of ', ' ').gsub(/[^a-z0-9 &]/i, ' ').split(' ')[0..3].map { |w| w[0] }.join('').upcase
       ent_type = ent.class.name.downcase.to_sym
     end
     
@@ -45,7 +45,7 @@ module EntityHelper
       end
     else
       content_tag(:span, class: "avatar initials #{ent_type.to_s}", style: "background-color: #{color}") do
-        content_tag(:span, class: 'initials') do
+        content_tag(:span, class: "initials length-#{initials.length}") do
           initials
         end
       end

@@ -1,3 +1,93 @@
 // Place all the styles related to the groups controller here.
 // They will automatically be included in application.css.
 // You can use Sass (SCSS) here: http://sass-lang.com/
+
+
+#groups-index.card {
+  margin: rempx(20px);
+  padding: rempx(24px);
+  
+  h1 { margin-top: 0; }
+  
+  .paging {
+    margin: 0 0 1em 0;
+    li { display: inline-block;  }
+    li.active { background-color: #ddd; }
+    a { display: block; height: 28px; width: 28px; line-height: 28px; text-align: center; }
+    a:hover { color: #C33; background-color: #f6f6f6; }
+  }
+  
+  #groups-index-list {
+    overflow: hidden;
+    
+    .col {
+      float: left;
+      width: 50%;
+    }
+    
+    li {
+      overflow: hidden;
+      margin: rempx(8px);
+      
+      @include avatar(48px);
+      .avatar {
+          display: block;
+          float: left;
+          margin-right: rempx(8px);
+      }
+    }
+  }  
+}
+
+#group-home {
+  .card.cover-image {
+    margin: rempx(20px);
+    padding: 0;
+    img { width: 100%; max-width: 100%; max-height: 300px; display: block; }
+    
+    .group-info {
+      display: table;
+      
+      .basics {
+        display: table-cell;
+        padding: rempx(16px) rempx(20px);
+        vertical-align: middle;
+        width: 100%; 
+        .name { font-size: rempx(24px); font-weight: 400; }
+        .description { color: #919CA2; font-size: rempx(18px); }
+      }
+      .stats {
+        display: table-cell;
+        text-align: center;
+        vertical-align: middle;
+        padding: 0 rempx(16px);
+        
+        .count {
+          font-size: rempx(24px);
+          font-weight: 400;
+        }
+        
+        .label {
+          color: #919CA2; 
+          font-size: rempx(18px);
+        }
+        
+      }
+      
+    }
+    
+  }
+  
+  .card.updates { float: left;
+    width: 60%;
+    margin: 0 rempx(20px) rempx(20px);
+  }
+  
+  .card.about {
+    margin: 0 rempx(20px) rempx(20px);
+    padding: rempx(20px);
+    width: 30%;
+    float: left;font-size: rempx(14px);
+    h1 { margin: 0 0 rempx(8px); font-weight: 500; font-family: inherit; font-size: rempx(13px); text-transform: uppercase; }
+  }
+}

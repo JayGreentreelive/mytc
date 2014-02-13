@@ -64,7 +64,7 @@ module Myumbc3
           new_group = Group.new
           new_group.status = :active
           new_group.slug = "my3-topic-#{topic}"
-          new_group.name = "#{topics[topic]} (Topic Archive)"
+          new_group.name = "#{topics[topic]}"
           new_group.description = "An archive of posts made in past version of myUMBC"
           new_group.created_at = Time.zone.now
           new_group.kind = :legacy

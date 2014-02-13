@@ -1,105 +1,52 @@
-#site-nav class=(@group.present? ? 'group' : 'nogroup') class=(@group.present? ? 'collapsed' : '')
-  ul
-    li.me
+#site-nav class=(@group.present? ? 'collapsed' : '')
+  ul.layout
+    li#site-nav-user
       a href='#'
         = entity_avatar(@user)
         .label= @user.name
-    li.start
+    li#site-nav-start
       a href=root_path
         .icon St
         .label Start
-    li.guide
+    li#site-nav-guide
       a href='#'
         .icon Gu
         .label Guide
-    li.events
+    li#site-nav-events
       a href='#'
         .icon Ev
         .label Events
-    li.groups
+    li#site-nav-groups
       a href=groups_path
         .icon Gr
         .label Groups
-    li.community
+    li#site-nav-community
       a href=groups_path
         .icon Co
         .label Community
-    li.group-header Your Groups
-    li.group
+    li#site-nav-user-groups-head Your Groups
+    li.site-nav-user-group
       a href=groups_path
         .count 12
         .icon in
         .label Incoming
-    li.group
+    li.site-nav-user-group
       a href=groups_path
         .count 99
         .icon CS
         .label Computer Science & Electrical Engineering
-    li.group
+    li.site-nav-user-group
       a href=groups_path
         .icon DI
         .label Division of Information Technology
-    li.group
+    li.site-nav-user-group
       a href=groups_path
         .count 9+
         .icon MF
         .label myUMBC Fan Club
-    li.group
+    li.site-nav-user-group
       a href=groups_path
         .count 1
         .icon UR
         .label Undergraduate Research
 
-- if @group
-  #group-nav
-    .group-summary
-      = entity_avatar(@user)
-      .name= @user.name
-      .kind= entity_desc(@user)
-      .kind style='font-size: .7em;'= @user.id
-    .group-follow
-      input type='submit' value='Follow'
-    .group-search
-      input type='text' placeholder='Search this group'
-    .group-navlist
-      ul
-        li.home: a
-          .icon
-          .label Home
-        li.all-posts: a href='?pl=all'
-          .icon.entypo.mail
-          .label All Posts
-        li.category.list: a
-          .icon
-          .label List Category
-        li.category.blog: a
-          .icon
-          .label Blog Category
-        li.category.forum: a
-          .icon
-          .label Forum Category
-        li.category.gallery: a
-          .icon
-          .label Gallery Category That's Too Long
-        li.events: a
-          .icon
-          .label Events
-        li.library: a
-          .icon
-          .label Library
-        li.people: a
-          .icon
-          .label People
-        li.people: a
-          .icon
-          .label Settings
-        li.links-header Links
-        li.link: a
-          .icon
-          .label Website
-        li.link: a
-          .icon
-          .label Twitter
-        li.link: a
-          .icon
-          .label Facebook

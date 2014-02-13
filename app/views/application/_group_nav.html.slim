@@ -1,0 +1,57 @@
+- if @group
+  #group-nav
+    #group-nav-header
+      = entity_avatar(@group)
+      .name= @group.name
+      .description= entity_desc(@group)
+      /.description style='font-size: .7em;'= @group.id
+    #group-nav-follow
+      input type='submit' value='Follow'
+    #group-nav-search
+      input type='text' placeholder='Search this group'
+    #group-nav-list
+      ul.layout
+        li#group-nav-home: a href=group_path(@group)
+          .icon
+          .label Home
+        li#group-nav-all-posts: a href=group_posts_path(@group)
+          .icon.entypo.mail
+          .label All Posts
+        - @group.categories.each do |cat|
+          li.category id="group-nav-category-#{cat.id}": a href=group_category_path(@group, cat)
+            - counted = (0..10).to_a.sample(1).first
+            - if counted > 0
+              .count= counted
+            .icon
+            .label= cat.name
+        /li.category.blog: a
+        /  .icon
+        /  .label Blog Category
+        /li.category.forum: a
+        /  .icon
+        /   .label Forum Category
+        / li.category.gallery: a
+        /   .icon
+        /   .label Gallery Category That's Too Long
+        li#group-nav-events: a
+          .icon
+          .label Events
+        li#group-nav-library: a
+          .icon
+          .label Library
+        li#group-nav-people: a
+          .icon
+          .label People
+        li#group-nav-settings: a
+          .icon
+          .label Settings
+        li#group-nav-links-header Links
+        li.link: a
+          .icon
+          .label Website
+        li.link: a
+          .icon
+          .label Twitter
+        li.link: a
+          .icon
+          .label Facebook

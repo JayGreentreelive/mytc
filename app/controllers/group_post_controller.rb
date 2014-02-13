@@ -4,12 +4,11 @@ class GroupPostController < ApplicationController
   
   def index
     @category_id = params[:category_id].presence
+    #@playlist = @group
   end
   
   def show
-    
-     
-    
+    #@playlist = @group
     @post = @group.posts.find(params[:post_id])
     
     if params[:list]

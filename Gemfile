@@ -61,6 +61,9 @@ gem 'attribute_normalizer'
 # Nokogiri, the best for XML parsing
 gem 'nokogiri'
 
+# HTML Santization... so clean
+gem 'sanitize'
+
 # Slim templating language, much faster than haml
 gem 'slim'
 

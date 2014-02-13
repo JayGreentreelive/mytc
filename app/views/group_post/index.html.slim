@@ -1,5 +1,6 @@
 - content_for :html_head
   scss:
+    .card { margin: 1.2em; }
     #content-details {
       float: left; width: 69%; margin-top: 0;
       .details {
@@ -21,10 +22,10 @@
       .title { font-weight: 400; }
     }
   
-= render 'group_home/group_header'
-= render 'group_home/group_menu'
+/= render 'group_home/group_header'
+/= render 'group_home/group_menu'
 
-#content-details.site-content
+.card
   
   - if @category_id
     - post_base = @group.categories.find(@category_id)
@@ -42,10 +43,10 @@
       li
         - if repost
           .list-avatar.group
-            = group_avatar(p.owner)
+            = entity_avatar(p.owner)
         - else
           .list-avatar.user
-            = group_avatar(p.author)
+            = entity_avatar(p.author)
         .list-details
           .title
             - if repost
@@ -59,6 +60,6 @@
               .cat' #{cat.name} &middot; 
             .posted_at= p.postings.where(target_id: @group.id).first.at.to_s(:long)
             /- if repost
-              .repost &middot; ♺ Reposted from #{group_avatar(p.owner)} #{p.owner.name}
+              .repost &middot; ♺ Reposted from #{entity_avatar(p.owner)} #{p.owner.name}
           
           

@@ -17,9 +17,9 @@ class ApplicationController < ActionController::Base
     else
       @user = User.new
     end
-    ucount = UmbcPerson.where(umbc_affiliations: 'undergraduate-student').count
-    @user = UmbcPerson.where(umbc_affiliations: 'undergraduate-student').offset(SecureRandom.random_number(ucount)).first
-    
+    #ucount = UmbcPerson.where(umbc_affiliations: 'undergraduate-student').count
+    @user = Person.get('my3-user-3')
+    #UmbcPerson.where(umbc_affiliations: 'undergraduate-student').offset(SecureRandom.random_number(ucount)).first
   end
   
 

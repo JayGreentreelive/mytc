@@ -2,7 +2,7 @@ doctype html
 html lang='en'
   head
     meta charset='UTF-8'
-    link href='http://fonts.googleapis.com/css?family=Roboto:400,300italic,300,400italic|Roboto+Slab:400,300' rel='stylesheet' type='text/css'
+    /link href='http://fonts.googleapis.com/css?family=Roboto:400,300italic,300,400italic|Roboto+Slab:400,300' rel='stylesheet' type='text/css'
     
     / Sets the viewport width to the width of the device, so media queries work
     / NOTE: We're locking the max scale (which prevents zooming) to fix bugs 
@@ -17,6 +17,9 @@ html lang='en'
     = render 'site_head'
     #site-container
       = render 'site_nav'
+      = render 'group_nav'
       #site-content
         = render 'site_playlist'
         = yield
+    - if content_for(:console)
+       #dev-console= content_for(:console)

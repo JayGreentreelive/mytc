@@ -1,11 +1,30 @@
-/= render 'group_home/group_header'
-/= render 'group_home/group_menu'
+#group-home
+  .card.cover-image
+    - if @group.header_url
+      img src=@group.header_url
+    .group-info
+      .basics
+        .name= @group.name
+        .description = entity_desc(@group)
+      .stats.paw-stats
+        .count ??
+        .label paws
+      .stats.post-stats
+        .count= @post_count
+        .label posts
+      .stats.people-stats
+        .count= @people_count
+        .label people
 
-#group-details.site-content
-  - if @group.header_url
-    .cover-image
-      = image_tag ("http://my.umbc.edu" + @group.header_url)
-  h1 About This Group
-  section style="white-space: pre-line;"= @group.description.try(:html_safe)
+  .card.updates
+    h1 Latest Updates
+    ul
+      - @group.posts.page(1,20).each do |p|
+        li= link_to p.title, group_post_path(@group, p)
+
+  .card.about
+    h1 About This Group
+    = simplify_html(@group.description)
   
-pre= JSON.pretty_generate(JSON[@group.as_document.to_json])
+- content_for :console
+  pre= JSON.pretty_generate(JSON[@group.as_document.to_json])
