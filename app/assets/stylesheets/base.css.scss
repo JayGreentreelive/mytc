@@ -155,6 +155,7 @@ header#site-head {
   color: #000;
   height: rempx(44px);
   max-height: rempx(44px);
+  padding: 0 rempx(4px);
 }
 
 #site-head-items {
@@ -196,7 +197,8 @@ header#site-head {
   }
   
   #site-user {
-    white-space: nowrap;
+    @include avatar(32px);
+    .avatar { }
   }
 }
 
@@ -538,8 +540,8 @@ header#site-head {
 //  border: 1px solid #ddd;
 //  border-bottom: none;
   
-  color: #fff;
-  background-color: rgb(90, 104, 111);
+  color: #000;
+  background-color: #fff; //rgb(90, 104, 111);
   
   .summary {
     display: table-cell;
@@ -585,15 +587,13 @@ header#site-head {
 //
 
 //
-//@media screen and (max-width: 1023px) {
-// #site-nav, #group-nav { display: none; }
-// #site-head #site-mobile-menu { display: table-cell; } 
-//}
-//
-//@media screen and (max-width: 764px) {
-// #site-nav, #group-nav { display: none; }
-// #site-head #site-logo { display: none; }
-// #site-head #site-dashboard { 
-//   .notifications, .mail, .blackboard, .apps { display: none; }
-// }
-//}
+@media screen and (max-width: 1023px) {
+ #site-nav, #group-nav { display: none; }
+ #site-head #site-mobile-menu { display: table-cell; } 
+}
+
+@media screen and (max-width: 764px) {
+  #site-head-items {
+ #site-logo, #site-user-mail, #site-user-blackboard, #site-user-apps, #site-user-logout { display: none; }
+}
+}

@@ -22,7 +22,6 @@ header#site-head
       #site-user-apps.item
         .icon Ap
       #site-user.item
-        .name
-          = @user.name
+        = entity_avatar(@user)
       #site-logout.item
         .icon= link_to '⏏', logout_path
